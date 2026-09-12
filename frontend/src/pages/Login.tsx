@@ -31,15 +31,17 @@ export default function Login() {
         formData.append('username', email);
         formData.append('password', password);
 
-        const response = await apiClient.post('/auth/login', formData, {
+        const response = await apiClient.post('/api/v1/auth/login', formData, {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
           }
         });
         
-        if (response.data.access_token) {
+        if (response.data?.access_token) {
           login(response.data.access_token);
           navigate(from, { replace: true });
+        } else {
+          throw new Error('Invalid response from server: Missing access token');
         }
       } else {
         // Mock signup flow as backend endpoint is not implemented
@@ -66,15 +68,17 @@ export default function Login() {
       formData.append('username', 'admin@coalmine.gov.in');
       formData.append('password', 'admin123');
 
-      const response = await apiClient.post('/auth/login', formData, {
+      const response = await apiClient.post('/api/v1/auth/login', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
       
-      if (response.data.access_token) {
+      if (response.data?.access_token) {
         login(response.data.access_token);
         navigate(from, { replace: true });
+      } else {
+        throw new Error('Invalid response from server');
       }
     } catch (err: any) {
       setError('Google Auth Mock Failed: Database might not be seeded.');

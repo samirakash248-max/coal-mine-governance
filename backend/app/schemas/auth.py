@@ -1,0 +1,16 @@
+import uuid
+from typing import Optional
+from pydantic import BaseModel, ConfigDict
+from app.models.user import Role
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenPayload(BaseModel):
+    sub: Optional[str] = None
+    role: Optional[Role] = None
+
+class Login(BaseModel):
+    email: str
+    password: str

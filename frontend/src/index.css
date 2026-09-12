@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /*
+   * CoalMine Governance Platform — shadcn/ui CSS variables
+   *
+   * Mapped to the coal-mining visual identity:
+   *   Primary   → deep graphite/charcoal
+   *   Secondary → warm earth tones
+   *   Accent    → mining amber/gold (used sparingly)
+   *   Muted     → soft graphite
+   *   Destructive → controlled red
+   *
+   * HSL values stored without hsl() wrapper.
+   * Tailwind consumes them via hsl(var(--color)).
+   */
+  :root {
+    --background: 0 0% 98%;            /* near off-white, warm and calm */
+    --foreground: 240 8% 11%;          /* graphite-950 */
+
+    --card: 0 0% 100%;                 /* white */
+    --card-foreground: 240 8% 11%;     /* graphite-950 */
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 8% 11%;
+
+    --primary: 240 5% 24%;             /* graphite-900 — authoritative, trustworthy */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 38 35% 93%;           /* earth-100 — warm, muted earth tone */
+    --secondary-foreground: 240 5% 24%;
+
+    --muted: 240 7% 94%;               /* graphite-100 */
+    --muted-foreground: 240 7% 48%;    /* graphite-500 */
+
+    --accent: 38 35% 93%;              /* earth-100 (subtle), not amber for backgrounds */
+    --accent-foreground: 240 5% 24%;
+
+    --destructive: 0 72% 51%;          /* controlled red */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 86%;              /* graphite-200 */
+    --input: 240 6% 86%;               /* graphite-200 */
+    --ring: 45 93% 47%;                /* mining-amber-500 — focus indicator */
+
+    --radius: 0.5rem;                  /* restrained, not excessively rounded */
+
+    /* Chart colors for Recharts integration */
+    --chart-1: 45 93% 47%;             /* mining-amber */
+    --chart-2: 240 7% 42%;             /* graphite-600 */
+    --chart-3: 217 91% 60%;            /* blue (info) */
+    --chart-4: 142 71% 45%;            /* green (healthy) */
+    --chart-5: 25 95% 53%;             /* orange (elevated) */
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  /* Focus ring — uses mining amber for visibility */
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Base body styles */
+  body {
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* Apply shadcn/ui base styles */
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Card component (legacy, can coexist with shadcn Card) */
+  .card-legacy {
+    @apply bg-white rounded-card border border-graphite-100 shadow-card;
+  }
+
+  /* Section header */
+  .section-header {
+    @apply text-lg font-semibold text-graphite-900;
+  }
+
+  /* Subtle label */
+  .label-subtle {
+    @apply text-xs font-medium uppercase tracking-wider text-graphite-500;
+  }
+}

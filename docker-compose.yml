@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8002/api/v1
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8002:8000" # Exposes 8000 on container to 8002 locally to match local setup
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///./coalmine.db # Defaults to sqlite, override in production
+      - SECRET_KEY=${SECRET_KEY:-demo_secret_key}
+      - CORS_ORIGINS=["http://localhost:5173"]
+      - AI_PROVIDER=local
+      - AI_BASE_URL=http://model-server:8001/v1
+      - AI_MODEL=coal-gov-qwen3-4b
+    volumes:
+      - ./backend/coalmine.db:/app/coalmine.db
+    depends_on:
+      - model-server
+
+  model-server:
+    build:
+      context: ./model-server
+    ports:
+      - "8001:8001"
+    environment:
+      - MODEL_NAME=Qwen/Qwen3-4B
+      - ADAPTER_PATH=/models/coal-gov-4b
+      - MODEL_ALIAS=coal-gov-qwen3-4b
+    volumes:
+      - ./models:/models  # Mount local models dir to container
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

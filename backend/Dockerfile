@@ -3,7 +3,7 @@ FROM python:3.12-slim AS base
 
 # Set working directory
 WORKDIR /app
-
+ENV PYTHONPATH=/app
 # Install system dependencies needed for compilation
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
@@ -23,4 +23,4 @@ COPY . .
 EXPOSE 8000
 
 # Start command
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

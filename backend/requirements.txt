@@ -11,3 +11,4 @@ redis
 httpx
 geoalchemy2
 python-multipart
+pgvector

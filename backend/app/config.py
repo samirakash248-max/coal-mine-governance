@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     STORAGE_LOCAL_PATH: str = "./storage"
     
     # App
-    DEBUG: bool = True
+    DEBUG: bool = False
     APP_VERSION: str = "0.1.0"
     APP_TITLE: str = "CoalMine Governance Platform"
     

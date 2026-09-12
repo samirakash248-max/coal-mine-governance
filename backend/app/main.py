@@ -55,7 +55,9 @@ app = FastAPI(
     description="Backend for the CoalMine governance platform.",
     lifespan=lifespan
 )
-
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,

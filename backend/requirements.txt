@@ -1,5 +1,5 @@
 fastapi
-uvicorn[standard]
+uvicorn
 pydantic
 pydantic-settings
 sqlalchemy[asyncio]
@@ -12,3 +12,4 @@ httpx
 geoalchemy2
 python-multipart
 pgvector
+aiosqlite

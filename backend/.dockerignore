@@ -2,8 +2,6 @@
 .venv
 __pycache__/
 *.pyc
-alembic/versions/*
-!alembic/versions/.gitkeep
 coalmine.db
 storage/
 pytest.ini

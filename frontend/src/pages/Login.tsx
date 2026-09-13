@@ -140,7 +140,7 @@ export default function Login() {
               <Input
                 id="email"
                 type="text"
-                placeholder="miner@coalcore.com"
+                placeholder="manager.raniganj@coalmine.gov.in"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="bg-graphite-800 border-graphite-700 text-graphite-100 placeholder:text-graphite-500 focus-visible:ring-mining-amber-500"

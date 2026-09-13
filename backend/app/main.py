@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI):
         logger.info("Redis connection verified")
         await redis.close()
     except Exception as e:
-        logger.error(f"Failed to connect to Redis: {e}")
+        logger.warning(f"Failed to connect to Redis: {e}. Note: Redis is currently optional for core functionality.")
         
     yield
     

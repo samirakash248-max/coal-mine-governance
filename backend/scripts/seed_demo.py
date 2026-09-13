@@ -35,9 +35,11 @@ from app.models.operations import EnvironmentReading, ProductionRecord
 from app.models.grievance import Grievance, GrievanceStatus
 from app.models.settings import UserSettings
 from app.core.security import hash_password
+from app.config import get_settings
+from app.database import engine
 
-DB_PATH = Path(__file__).resolve().parent.parent / "coalmine.db"
-DB_URL = f"sqlite+aiosqlite:///{DB_PATH}"
+settings = get_settings()
+DB_URL = settings.DATABASE_URL
 TODAY = date.today()
 NOW = datetime.now(timezone.utc)
 
@@ -58,7 +60,7 @@ def _audit_hash(action, entity_type, entity_id, after_state):
 
 async def seed_demo():
     reset = "--reset" in sys.argv
-    engine = create_async_engine(DB_URL, echo=False)
+    print(f"Using database URL: {DB_URL}")
 
     if reset:
         print("[RESET] Dropping all tables...")
@@ -71,6 +73,15 @@ async def seed_demo():
     Session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with Session() as s:
+        # Check if already seeded
+        from sqlalchemy import select
+        existing_org = (await s.execute(select(Organization).where(Organization.name == "Eastern Coal Operations Ltd."))).scalar_one_or_none()
+        if existing_org and not reset:
+            print("[INFO] Demo data already exists (Eastern Coal Operations Ltd. found).")
+            print("[INFO] Skipping seed process to avoid duplicates.")
+            print("[INFO] Use --reset to drop and reseed data (Development only).")
+            return
+
         # ================================================================
         # 1. ORGANIZATION HIERARCHY
         # ================================================================

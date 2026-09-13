@@ -21,3 +21,6 @@ class UserResponse(UserBase):
     id: uuid.UUID
     
     model_config = ConfigDict(from_attributes=True)
+
+class UserUpdateMe(BaseModel):
+    full_name: Optional[str] = None

@@ -11,8 +11,8 @@ from app.database import get_db
 from app.config import get_settings, Settings
 from app.core.security import verify_password, create_access_token, hash_password
 from app.models.user import User, Role
-from app.schemas.auth import Token, GoogleAuthCallback
-from app.schemas.user import UserResponse
+from app.schemas.auth import Token, GoogleAuthCallback, ChangePasswordRequest
+from app.schemas.user import UserResponse, UserUpdateMe
 from app.api.deps import get_current_user
 
 router = APIRouter()
@@ -141,3 +141,34 @@ async def logout():
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+@router.patch("/me", response_model=UserResponse)
+async def update_me(
+    update_data: UserUpdateMe,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update the currently authenticated user's own profile. Role and email are not modifiable here."""
+    if update_data.full_name is not None:
+        stripped = update_data.full_name.strip()
+        if not stripped:
+            raise HTTPException(status_code=422, detail="Full name cannot be empty")
+        current_user.full_name = stripped
+    await db.commit()
+    await db.refresh(current_user)
+    return current_user
+
+@router.post("/change-password", status_code=204)
+async def change_password(
+    payload: ChangePasswordRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Change the password for the currently authenticated user only."""
+    if not verify_password(payload.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    if len(payload.new_password) < 8:
+        raise HTTPException(status_code=422, detail="New password must be at least 8 characters")
+    current_user.hashed_password = hash_password(payload.new_password)
+    await db.commit()
+    return None

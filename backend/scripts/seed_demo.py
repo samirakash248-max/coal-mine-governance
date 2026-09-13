@@ -60,7 +60,17 @@ def _audit_hash(action, entity_type, entity_id, after_state):
 
 async def seed_demo():
     reset = "--reset" in sys.argv
-    print(f"Using database URL: {DB_URL}")
+    
+    # Sanitize DB_URL for logging
+    safe_db_url = DB_URL
+    if "@" in safe_db_url:
+        protocol_user, host_db = safe_db_url.split("@", 1)
+        if ":" in protocol_user and "//" in protocol_user:
+            prefix, user_pass = protocol_user.split("//", 1)
+            user = user_pass.split(":")[0]
+            safe_db_url = f"{prefix}//{user}:<REDACTED>@{host_db}"
+            
+    print(f"Using database: {safe_db_url}")
 
     if reset:
         print("[RESET] Dropping all tables...")

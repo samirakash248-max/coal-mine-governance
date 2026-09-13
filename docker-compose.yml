@@ -1,32 +1,59 @@
 version: '3.8'
 
 services:
-  frontend:
-    build:
-      context: ./frontend
-    ports:
-      - "5173:5173"
+  postgres:
+    image: postgres:15-alpine
     environment:
-      - VITE_API_BASE_URL=http://localhost:8002/api/v1
-    depends_on:
-      - backend
+      POSTGRES_USER: \
+      POSTGRES_PASSWORD: \
+      POSTGRES_DB: \
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \ -d \"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
       context: ./backend
     ports:
-      - "8002:8000" # Exposes 8000 on container to 8002 locally to match local setup
+      - "8002:8000"
     environment:
-      - DATABASE_URL=sqlite+aiosqlite:///./coalmine.db # Defaults to sqlite, override in production
-      - SECRET_KEY=${SECRET_KEY:-demo_secret_key}
-      - CORS_ORIGINS=["http://localhost:5173"]
+      - POSTGRES_USER=\
+      - POSTGRES_PASSWORD=\
+      - POSTGRES_DB=\
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=\
+      - CORS_ORIGINS=["http://localhost:5173", "http://localhost:3000"]
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - AI_PROVIDER=local
       - AI_BASE_URL=http://model-server:8001/v1
       - AI_MODEL=coal-gov-qwen3-4b
-    volumes:
-      - ./backend/coalmine.db:/app/coalmine.db
     depends_on:
-      - model-server
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      model-server:
+        condition: service_started
 
   model-server:
     build:
@@ -38,7 +65,7 @@ services:
       - ADAPTER_PATH=/models/coal-gov-4b
       - MODEL_ALIAS=coal-gov-qwen3-4b
     volumes:
-      - ./models:/models  # Mount local models dir to container
+      - ./models:/models
     deploy:
       resources:
         reservations:
@@ -46,3 +73,16 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8002/api/v1
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

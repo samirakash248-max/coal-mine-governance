@@ -14,3 +14,6 @@ class TokenPayload(BaseModel):
 class Login(BaseModel):
     email: str
     password: str
+
+class GoogleAuthCallback(BaseModel):
+    code: str

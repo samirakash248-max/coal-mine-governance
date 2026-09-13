@@ -63,26 +63,15 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      // Mock Google Auth by logging in as the admin user silently
-      const formData = new URLSearchParams();
-      formData.append('username', 'admin@coalmine.gov.in');
-      formData.append('password', 'admin123');
-
-      const response = await apiClient.post('/api/v1/auth/login', formData, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      });
-      
-      if (response.data?.access_token) {
-        login(response.data.access_token);
-        navigate(from, { replace: true });
+      const response = await apiClient.get('/api/v1/auth/google/login');
+      if (response.data?.url && response.data?.state) {
+        sessionStorage.setItem('oauth_state', response.data.state);
+        window.location.href = response.data.url;
       } else {
         throw new Error('Invalid response from server');
       }
     } catch (err: any) {
-      setError('Google Auth Mock Failed: Database might not be seeded.');
-    } finally {
+      setError(err.response?.data?.detail || 'Failed to initiate Google Login.');
       setIsLoading(false);
     }
   };

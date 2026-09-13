@@ -3,6 +3,7 @@ import { AppShell } from '../layouts/AppShell';
 import { PublicLayout } from '../layouts/PublicLayout';
 import { ProtectedRoute } from './ProtectedRoute';
 import Login from '../pages/Login';
+import AuthCallback from '../pages/AuthCallback';
 import Unauthorized from '../pages/Unauthorized';
 import Dashboard from '../pages/Dashboard';
 import DailyBrief from '../pages/DailyBrief';
@@ -30,6 +31,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />,
+  },
+  {
+    path: '/auth/callback',
+    element: <AuthCallback />,
   },
   {
     path: '/unauthorized',

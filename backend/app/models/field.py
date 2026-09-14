@@ -1,3 +1,4 @@
+﻿from geoalchemy2 import Geometry
 import uuid
 import enum
 from datetime import datetime
@@ -55,6 +56,7 @@ class Inspection(BaseModel):
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     latitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     longitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    location_geom = mapped_column(Geometry('POINT', srid=4326), nullable=True)
     status: Mapped[InspectionStatus] = mapped_column(SQLEnum(InspectionStatus), nullable=False, default=InspectionStatus.DRAFT, index=True)
     
     idempotency_key: Mapped[Optional[str]] = mapped_column(String(255), unique=True, nullable=True)
@@ -90,6 +92,7 @@ class SafetyEvent(BaseModel):
     location_details: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     latitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     longitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    location_geom = mapped_column(Geometry('POINT', srid=4326), nullable=True)
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     
     is_anonymous: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -109,3 +112,5 @@ class CorrectiveAction(BaseModel):
     assigned_to_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     due_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     status: Mapped[ActionStatus] = mapped_column(SQLEnum(ActionStatus), nullable=False, default=ActionStatus.OPEN)
+
+

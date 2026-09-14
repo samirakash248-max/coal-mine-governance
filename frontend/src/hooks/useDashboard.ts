@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
+﻿import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 
-interface DashboardSummary {
+export interface DashboardSummary {
   total_mines: number;
   compliance_percentage: number;
   overdue_count: number;
@@ -11,6 +11,11 @@ interface DashboardSummary {
   open_near_misses_count?: number;
   incidents_count?: number;
   overdue_actions_count?: number;
+  high_critical_risk_cases?: number;
+  recurring_issues_detected?: number;
+  anomaly_signals_count?: number;
+  pending_ai_reviews?: number;
+  ai_overrides_count?: number;
 }
 
 export function useDashboardSummary() {
@@ -20,6 +25,6 @@ export function useDashboardSummary() {
       const { data } = await apiClient.get<DashboardSummary>('/api/v1/dashboard/summary');
       return data;
     },
-    staleTime: 30 * 1000, // Cache for 30s — prevents duplicate requests on re-navigation
+    staleTime: 30 * 1000,
   });
 }

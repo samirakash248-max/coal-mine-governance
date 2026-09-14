@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+﻿import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 
 export interface Mine {
@@ -6,6 +6,8 @@ export interface Mine {
   name: string;
   location: string;
   status: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export function useMines() {
@@ -15,7 +17,7 @@ export function useMines() {
       const { data } = await apiClient.get<Mine[]>('/api/v1/hierarchy/mines');
       return data;
     },
-    staleTime: 5 * 60 * 1000, // Mine hierarchy is stable — cache 5 min
+    staleTime: 5 * 60 * 1000, // Mine hierarchy is stable - cache 5 min
   });
 }
 

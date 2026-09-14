@@ -1,32 +1,41 @@
-import { useQuery } from '@tanstack/react-query';
+﻿import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '../api/client';
 
 export interface AuditLog {
   id: string;
+  user_id: string | null;
+  role: string | null;
+  action: string;
   entity_type: string;
   entity_id: string;
-  action: string;
-  user_id: string;
-  role: string;
   before_state: any;
   after_state: any;
   timestamp: string;
-  user_name?: string;
+  hash_signature: string;
 }
 
-export function useAudit(entityType: string, entityId: string) {
-  return useQuery<AuditLog[]>({
-    queryKey: ['audit', entityType, entityId],
+export function useGlobalAuditLogs(page: number, limit: number, filters?: { action?: string; entity_type?: string }) {
+  return useQuery({
+    queryKey: ['audit-logs', 'global', page, limit, filters],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('No auth token');
-      const res = await fetch(`/api/v1/audit/${entityType}/${entityId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (!res.ok) throw new Error('Failed to fetch audit logs');
-      return res.json();
+      const skip = (page - 1) * limit;
+      let url = `/api/v1/audit/?skip=${skip}&limit=${limit}`;
+      if (filters?.action) url += `&action=${filters.action}`;
+      if (filters?.entity_type) url += `&entity_type=${filters.entity_type}`;
+      
+      const { data } = await apiClient.get<AuditLog[]>(url);
+      return data;
     },
-    enabled: !!entityType && !!entityId,
+  });
+}
+
+export function useEntityAuditLogs(entityType: string, entityId: string) {
+  return useQuery({
+    queryKey: ['audit-logs', entityType, entityId],
+    queryFn: async () => {
+      const { data } = await apiClient.get<AuditLog[]>(`/api/v1/audit/${entityType}/${entityId}`);
+      return data;
+    },
+    enabled: !!entityId && !!entityType,
   });
 }

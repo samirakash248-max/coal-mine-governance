@@ -1,3 +1,4 @@
+﻿from geoalchemy2 import Geometry
 import uuid
 from typing import Optional
 from sqlalchemy import String, ForeignKey
@@ -38,6 +39,7 @@ class Mine(BaseModel):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     latitude: Mapped[Optional[float]] = mapped_column(nullable=True)
     longitude: Mapped[Optional[float]] = mapped_column(nullable=True)
+    location_geom = mapped_column(Geometry('POINT', srid=4326), nullable=True)
     status: Mapped[str] = mapped_column(String(50), default="active")
     mine_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # e.g., open_cast, underground
     manager_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
@@ -53,3 +55,5 @@ class Department(BaseModel):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     
     mine: Mapped["Mine"] = relationship(back_populates="departments")
+
+

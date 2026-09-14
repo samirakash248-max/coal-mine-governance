@@ -1,4 +1,4 @@
-from contextlib import asynccontextmanager
+﻿from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
@@ -28,9 +28,8 @@ async def lifespan(app: FastAPI):
         import app.models  # This imports all models
         from app.models.analytics import AnomalyEvent, RecurringIssue
         async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
             await conn.execute(text("SELECT 1"))
-        logger.info("Database tables created and connection verified")
+        logger.info("Database connection verified")
     except Exception as e:
         logger.error(f"Failed to connect to the database: {e}")
         
@@ -80,3 +79,4 @@ async def root():
 
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host="0.0.0.0", port=8002, reload=settings.DEBUG)
+

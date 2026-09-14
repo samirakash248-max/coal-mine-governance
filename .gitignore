@@ -51,3 +51,6 @@ models/
 Thumbs.db
 
 *.tsbuildinfo
+
+docker-compose.yml.backup
+docker-compose.yml.before-pgvector

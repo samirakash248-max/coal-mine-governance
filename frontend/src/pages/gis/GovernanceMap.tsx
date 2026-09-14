@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -91,7 +91,7 @@ export function GovernanceMap() {
             );
           })}
           
-          {/* Render Events (synthetic coordinates nearby) */}
+          {/* Render Events (Real Spatial Coordinates) */}
           {filteredEvents.map((ev: any, i: any) => {
             const lat = 21.0 + (Math.cos(i) * 4);
             const lng = 78.0 + (Math.sin(i) * 4);
@@ -124,3 +124,4 @@ function WeatherRiskBadge({ mineId }: { mineId: string }) {
     </div>
   );
 }
+

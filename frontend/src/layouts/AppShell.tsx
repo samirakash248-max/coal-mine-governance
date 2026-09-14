@@ -1,8 +1,8 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { 
   Home, Map, Calendar, Search, Shield, 
-  AlertTriangle, BarChart3, Settings, Menu, X, ChevronRight, LogOut, Mountain, CheckCircle, Map as MapIcon, FileText, Newspaper, Sparkles, MessageSquare
+  AlertTriangle, BarChart3, Settings, Menu, Cloud, X, ChevronRight, LogOut, Mountain, CheckCircle, Map as MapIcon, FileText, Newspaper, Sparkles, MessageSquare
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -17,6 +17,7 @@ const navItems = [
   { name: 'Dashboard', to: '/dashboard', icon: Home },
   { name: 'Daily Brief', to: '/daily-brief', icon: Newspaper },
   { name: 'Governance Map', to: '/gis', icon: MapIcon },
+  { name: 'Weather Risk', to: '/weather', icon: Cloud },
   { name: 'Mines', to: '/mines', icon: Map },
   { name: 'Compliance Calendar', to: '/compliance/calendar', icon: Calendar },
   { name: 'Report Observation', to: '/field/report', icon: AlertTriangle },
@@ -24,6 +25,8 @@ const navItems = [
   { name: 'Document Library', to: '/documents', icon: FileText },
   { name: 'Inspections', to: '/inspections', icon: Search },
   { name: 'Safety', to: '/safety', icon: Shield },
+  { name: 'Risk Intelligence', to: '/risk', icon: AlertTriangle },
+  { name: 'Audit Trail', to: '/audit', icon: Shield },
   { name: 'Analytics', to: '/analytics', icon: BarChart3 },
   { name: 'Reports', to: '/reports', icon: FileText },
   { name: 'Grievances', to: '/grievances', icon: MessageSquare },
@@ -198,3 +201,6 @@ export function AppShell() {
     </div>
   );
 }
+
+
+

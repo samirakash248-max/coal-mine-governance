@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { X, Sparkles, Send, CheckCircle2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useCopilotChat, CopilotMessage, CopilotAction } from '../../hooks/useCopilot';
@@ -120,7 +120,7 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({ open, onClose }) =
           {chatMutation.isError && (
             <div className="flex justify-start">
               <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg px-3 py-2 text-sm">
-                <strong>Connection Error:</strong> Could not reach the local AI inference server.
+                <strong>{chatMutation.error?.message?.toLowerCase().includes('timeout') || chatMutation.error?.message?.toLowerCase().includes('network') ? 'Timeout Error:' : 'Connection Error:'}</strong> {chatMutation.error?.message?.toLowerCase().includes('timeout') || chatMutation.error?.message?.toLowerCase().includes('network') ? 'AI analysis is taking longer than expected. Please try again.' : 'The governance service is temporarily unavailable.'}
               </div>
             </div>
           )}
@@ -154,3 +154,4 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({ open, onClose }) =
     </>
   );
 };
+

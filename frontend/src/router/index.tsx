@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+﻿import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppShell } from '../layouts/AppShell';
 import { PublicLayout } from '../layouts/PublicLayout';
 import { ProtectedRoute } from './ProtectedRoute';
@@ -19,6 +19,9 @@ import GrievancesList from '../pages/grievances/GrievancesList';
 import ExecutiveDashboard from '../pages/analytics/ExecutiveDashboard';
 import ReportsManager from '../pages/reports/ReportsManager';
 import TransparencyPortal from '../pages/public/TransparencyPortal';
+import RiskIntelligence from '../pages/risk/RiskIntelligence';
+import AuditTrail from '../pages/audit/AuditTrail';
+import EnvironmentalIntelligence from '../pages/weather/EnvironmentalIntelligence';
 import Settings from '../pages/Settings';
 import Inspections from '../pages/Inspections';
 import CreateInspection from '../pages/inspections/CreateInspection';
@@ -114,6 +117,18 @@ export const router = createBrowserRouter([
         path: 'reports',
         element: <ReportsManager />,
       },
+            {
+        path: 'risk',
+        element: <RiskIntelligence />,
+      },
+      {
+        path: 'audit',
+        element: <AuditTrail />,
+      },
+            {
+        path: 'weather',
+        element: <EnvironmentalIntelligence />,
+      },
       {
         path: 'settings',
         element: <Settings />,
@@ -145,3 +160,5 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
+

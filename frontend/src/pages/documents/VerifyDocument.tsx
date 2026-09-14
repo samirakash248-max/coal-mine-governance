@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDocument, useVerifyDocument, VerifyDocumentPayload } from '@/hooks/useDocuments';
 import { Button } from '@/components/ui/button';
@@ -13,20 +13,20 @@ export default function VerifyDocument() {
 
   const [formData, setFormData] = useState<VerifyDocumentPayload>({
     title: '',
-    documentNumber: '',
+    document_number: '',
     category: '',
-    issueDate: '',
-    expiryDate: '',
+    issue_date: '',
+    expiry_date: '',
   });
 
   useEffect(() => {
     if (document) {
       setFormData({
         title: document.title || '',
-        documentNumber: document.documentNumber || '',
+        document_number: document.document_number || '',
         category: document.category || '',
-        issueDate: document.issueDate || '',
-        expiryDate: document.expiryDate || '',
+        issue_date: document.issue_date || '',
+        expiry_date: document.expiry_date || '',
       });
     }
   }, [document]);
@@ -79,7 +79,7 @@ export default function VerifyDocument() {
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1 block">Document Number</label>
-                  <Input name="documentNumber" value={formData.documentNumber} onChange={handleChange} required />
+                  <Input name="document_number" value={formData.document_number} onChange={handleChange} required />
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1 block">Category</label>
@@ -87,11 +87,11 @@ export default function VerifyDocument() {
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1 block">Issue Date</label>
-                  <Input name="issueDate" type="date" value={formData.issueDate} onChange={handleChange} required />
+                  <Input name="issue_date" type="date" value={formData.issue_date} onChange={handleChange} required />
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1 block">Expiry Date</label>
-                  <Input name="expiryDate" type="date" value={formData.expiryDate} onChange={handleChange} required />
+                  <Input name="expiry_date" type="date" value={formData.expiry_date} onChange={handleChange} required />
                 </div>
                 
                 <Button type="submit" disabled={verifyMutation.isPending} className="mt-4">

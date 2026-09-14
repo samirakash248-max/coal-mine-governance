@@ -18,7 +18,7 @@ export const useUser = () => {
   return useQuery<UserProfile, Error>({
     queryKey: ['me'],
     queryFn: async () => {
-      const response = await apiClient.get('/auth/me');
+      const response = await apiClient.get('/api/v1/auth/me');
       return response.data;
     },
     enabled: isAuthenticated,

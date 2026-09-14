@@ -1,4 +1,4 @@
-import uuid
+﻿import uuid
 from typing import Optional
 from pydantic import BaseModel, ConfigDict
 from app.models.user import Role
@@ -21,3 +21,7 @@ class GoogleAuthCallback(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
+class SignupRequest(BaseModel):
+    email: str
+    password: str
+    full_name: str

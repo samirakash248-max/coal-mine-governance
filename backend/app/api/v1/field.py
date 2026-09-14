@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+﻿from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime, timezone
@@ -152,5 +152,35 @@ async def get_actions(
     if current_user.mine_id:
         stmt = stmt.where(CorrectiveAction.mine_id == current_user.mine_id)
         
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+@router.get("/events/spatial/{mine_id}", response_model=list[SafetyEventResponse])
+async def get_spatial_events(
+    mine_id: uuid.UUID,
+    radius_km: float = 50.0,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    from sqlalchemy import func
+    from app.models.hierarchy import Mine
+    
+    target_mine = (await db.execute(select(Mine).where(Mine.id == mine_id))).scalar_one_or_none()
+    if not target_mine or not target_mine.location_geom:
+        return []
+        
+    stmt = select(SafetyEvent).where(SafetyEvent.location_geom.is_not(None))
+    
+    if current_user.mine_id:
+        if current_user.mine_id != mine_id:
+            return []
+        stmt = stmt.where(SafetyEvent.mine_id == current_user.mine_id)
+        
+    # Spatial filter for events within radius of the target mine
+    radius_deg = radius_km / 111.0
+    stmt = stmt.where(
+        func.ST_DWithin(SafetyEvent.location_geom, target_mine.location_geom, radius_deg)
+    ).limit(50)
+    
     result = await db.execute(stmt)
     return result.scalars().all()

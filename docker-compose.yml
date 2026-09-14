@@ -2,17 +2,19 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:15-alpine
+    build:
+      context: .
+      dockerfile: postgres.Dockerfile
     environment:
-      POSTGRES_USER: \
-      POSTGRES_PASSWORD: \
-      POSTGRES_DB: \
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U \ -d \"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -33,52 +35,31 @@ services:
     ports:
       - "8002:8000"
     environment:
-      - POSTGRES_USER=\
-      - POSTGRES_PASSWORD=\
-      - POSTGRES_DB=\
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - REDIS_URL=redis://redis:6379/0
-      - SECRET_KEY=\
+      - SECRET_KEY=${SECRET_KEY}
       - CORS_ORIGINS=["http://localhost:5173", "http://localhost:3000"]
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - AI_PROVIDER=local
-      - AI_BASE_URL=http://model-server:8001/v1
+      - AI_BASE_URL=http://host.docker.internal:8001/v1
       - AI_MODEL=coal-gov-qwen3-4b
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      model-server:
-        condition: service_started
-
-  model-server:
-    build:
-      context: ./model-server
-    ports:
-      - "8001:8001"
-    environment:
-      - MODEL_NAME=Qwen/Qwen3-4B
-      - ADAPTER_PATH=/models/coal-gov-4b
-      - MODEL_ALIAS=coal-gov-qwen3-4b
-    volumes:
-      - ./models:/models
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
 
   frontend:
     build:
       context: ./frontend
     ports:
-      - "5173:5173"
+      - "5173:80"
     environment:
       - VITE_API_URL=http://localhost:8002/api/v1
     depends_on:

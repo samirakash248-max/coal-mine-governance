@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDocuments, useUploadDocument } from '@/hooks/useDocuments';
 import { Button } from '@/components/ui/button';
@@ -84,10 +84,10 @@ export default function DocumentLibrary() {
               documents.map((doc) => (
                 <TableRow key={doc.id}>
                   <TableCell>{doc.title}</TableCell>
-                  <TableCell>{doc.documentNumber}</TableCell>
+                  <TableCell>{doc.document_number}</TableCell>
                   <TableCell>{doc.category}</TableCell>
-                  <TableCell>{doc.issueDate}</TableCell>
-                  <TableCell>{doc.expiryDate}</TableCell>
+                  <TableCell>{doc.issue_date}</TableCell>
+                  <TableCell>{doc.expiry_date}</TableCell>
                   <TableCell>{doc.status}</TableCell>
                   <TableCell className="text-right">
                     {doc.status === 'PENDING_VERIFICATION' && (

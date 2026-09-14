@@ -1,15 +1,14 @@
-"""
+﻿"""
 Comprehensive SIH Demo Dataset Seed Script
 ===========================================
 Creates a realistic, interconnected coal mine governance dataset
 for Smart India Hackathon demonstration.
 
-ALL DATA IS FICTIONAL — DEMO/SIMULATED ONLY.
+ALL DATA IS FICTIONAL â€” DEMO/SIMULATED ONLY.
 
 Usage:
     cd backend
     .\.venv\Scripts\python.exe scripts/seed_demo.py          # Seed fresh
-    .\.venv\Scripts\python.exe scripts/seed_demo.py --reset   # Drop + Reseed
 """
 import asyncio, sys, os, uuid, hashlib, json
 from datetime import datetime, date, timedelta, timezone
@@ -59,7 +58,6 @@ def _audit_hash(action, entity_type, entity_id, after_state):
     return h
 
 async def seed_demo():
-    reset = "--reset" in sys.argv
     
     # Sanitize DB_URL for logging
     safe_db_url = DB_URL
@@ -72,13 +70,7 @@ async def seed_demo():
             
     print(f"Using database: {safe_db_url}")
 
-    if reset:
-        print("[RESET] Dropping all tables...")
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
     
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
 
     Session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
@@ -86,10 +78,9 @@ async def seed_demo():
         # Check if already seeded
         from sqlalchemy import select
         existing_org = (await s.execute(select(Organization).where(Organization.name == "Eastern Coal Operations Ltd."))).scalar_one_or_none()
-        if existing_org and not reset:
+        if existing_org:
             print("[INFO] Demo data already exists (Eastern Coal Operations Ltd. found).")
             print("[INFO] Skipping seed process to avoid duplicates.")
-            print("[INFO] Use --reset to drop and reseed data (Development only).")
             return
 
         # ================================================================
@@ -168,30 +159,30 @@ async def seed_demo():
         # ================================================================
         print("[3/12] Creating inspections...")
         inspection_templates = [
-            # Mine 0 – Raniganj (10 inspections)
+            # Mine 0 â€“ Raniganj (10 inspections)
             (0, "ROUTINE", -30, InspectionStatus.CLOSED, "Routine pit inspection. All clear.", {"highwall_stable": True, "dust_controlled": True}),
             (0, "SAFETY_AUDIT", -21, InspectionStatus.VERIFIED, "Safety audit of Section B. Minor issues found.", {"ppe_compliance": True, "ventilation_adequate": False}),
-            (0, "ENVIRONMENTAL", -14, InspectionStatus.SUBMITTED, "Environmental check — dust levels elevated.", {"dust_controlled": False, "water_quality_ok": True}),
+            (0, "ENVIRONMENTAL", -14, InspectionStatus.SUBMITTED, "Environmental check â€” dust levels elevated.", {"dust_controlled": False, "water_quality_ok": True}),
             (0, "ROUTINE", -7, InspectionStatus.SUBMITTED, "Weekly routine check. Conveyor belt wear observed.", {"conveyor_ok": False, "signage_adequate": True}),
-            (0, "SAFETY_AUDIT", -3, InspectionStatus.DRAFT, "Emergency exit audit — 2 exits blocked.", {"exit_1_clear": False, "exit_2_clear": False, "exit_3_clear": True}),
+            (0, "SAFETY_AUDIT", -3, InspectionStatus.DRAFT, "Emergency exit audit â€” 2 exits blocked.", {"exit_1_clear": False, "exit_2_clear": False, "exit_3_clear": True}),
             (0, "ELECTRICAL", -1, InspectionStatus.SUBMITTED, "Electrical panel inspection. Loose wiring found.", {"panel_a_ok": False, "panel_b_ok": True}),
-            (0, "ROUTINE", 0, InspectionStatus.DRAFT, "Today's routine inspection — in progress.", {}),
-            # Mine 1 – Durgapur (7 inspections)
+            (0, "ROUTINE", 0, InspectionStatus.DRAFT, "Today's routine inspection â€” in progress.", {}),
+            # Mine 1 â€“ Durgapur (7 inspections)
             (1, "ROUTINE", -25, InspectionStatus.CLOSED, "Monthly routine. PPE compliance at 92%.", {"ppe_compliance": True}),
-            (1, "ENVIRONMENTAL", -18, InspectionStatus.VERIFIED, "Env. monitoring — noise levels within range.", {"noise_ok": True, "air_quality_ok": True}),
-            (1, "SAFETY_AUDIT", -10, InspectionStatus.SUBMITTED, "Safety walk — inadequate barricading at Pit C.", {"barricading_ok": False}),
+            (1, "ENVIRONMENTAL", -18, InspectionStatus.VERIFIED, "Env. monitoring â€” noise levels within range.", {"noise_ok": True, "air_quality_ok": True}),
+            (1, "SAFETY_AUDIT", -10, InspectionStatus.SUBMITTED, "Safety walk â€” inadequate barricading at Pit C.", {"barricading_ok": False}),
             (1, "ROUTINE", -5, InspectionStatus.SUBMITTED, "Haul road inspection. Road surface deteriorating.", {"road_surface_ok": False}),
             (1, "MACHINERY", -2, InspectionStatus.DRAFT, "HEMM maintenance inspection pending.", {}),
-            # Mine 2 – Asansol (5 inspections)
+            # Mine 2 â€“ Asansol (5 inspections)
             (2, "ROUTINE", -20, InspectionStatus.CLOSED, "Routine OC pit inspection completed.", {"slope_stability_ok": True}),
             (2, "ENVIRONMENTAL", -12, InspectionStatus.VERIFIED, "Rainwater runoff assessment done.", {"drainage_ok": True}),
-            (2, "SAFETY_AUDIT", -4, InspectionStatus.SUBMITTED, "Safety audit — lighting inadequate in loading area.", {"lighting_ok": False}),
-            (2, "BLASTING", -1, InspectionStatus.DRAFT, "Pre-blast survey — pending.", {}),
+            (2, "SAFETY_AUDIT", -4, InspectionStatus.SUBMITTED, "Safety audit â€” lighting inadequate in loading area.", {"lighting_ok": False}),
+            (2, "BLASTING", -1, InspectionStatus.DRAFT, "Pre-blast survey â€” pending.", {}),
             # Overdue inspections
-            (0, "DGMS_STATUTORY", -45, InspectionStatus.SUBMITTED, "[DEMO] DGMS statutory inspection — overdue for review.", {"statutory_check": False}),
-            (1, "DGMS_STATUTORY", -40, InspectionStatus.DRAFT, "[DEMO] DGMS quarterly review — overdue.", {}),
-            (2, "VENTILATION", -35, InspectionStatus.SUBMITTED, "[DEMO] Ventilation survey — pending verification.", {"ventilation_adequate": False}),
-            (0, "ROUTINE", -50, InspectionStatus.CLOSED, "Historical routine — all clear at that time.", {"all_ok": True}),
+            (0, "DGMS_STATUTORY", -45, InspectionStatus.SUBMITTED, "[DEMO] DGMS statutory inspection â€” overdue for review.", {"statutory_check": False}),
+            (1, "DGMS_STATUTORY", -40, InspectionStatus.DRAFT, "[DEMO] DGMS quarterly review â€” overdue.", {}),
+            (2, "VENTILATION", -35, InspectionStatus.SUBMITTED, "[DEMO] Ventilation survey â€” pending verification.", {"ventilation_adequate": False}),
+            (0, "ROUTINE", -50, InspectionStatus.CLOSED, "Historical routine â€” all clear at that time.", {"all_ok": True}),
         ]
 
         inspections = []
@@ -211,29 +202,29 @@ async def seed_demo():
         safety_templates = [
             # CRITICAL (2)
             (0, SafetyEventType.INCIDENT, SafetyEventCategory.SAFETY, SafetyEventSeverity.CRITICAL,
-             "Conveyor belt snapped during operation — workers evacuated from loading zone", "Conveyor 3, Section A", -2, 92, "CRITICAL"),
+             "Conveyor belt snapped during operation â€” workers evacuated from loading zone", "Conveyor 3, Section A", -2, 92, "CRITICAL"),
             (0, SafetyEventType.UNSAFE_CONDITION, SafetyEventCategory.SAFETY, SafetyEventSeverity.CRITICAL,
-             "Unstable highwall with visible cracks — immediate exclusion zone established", "Highwall, Pit B North Face", -1, 88, "CRITICAL"),
+             "Unstable highwall with visible cracks â€” immediate exclusion zone established", "Highwall, Pit B North Face", -1, 88, "CRITICAL"),
             # HIGH (5)
             (0, SafetyEventType.NEAR_MISS, SafetyEventCategory.SAFETY, SafetyEventSeverity.HIGH,
              "Haul truck narrowly avoided collision with light vehicle at blind junction", "Junction 4, Pit B", -3, 75, "HIGH"),
             (1, SafetyEventType.UNSAFE_CONDITION, SafetyEventCategory.SAFETY, SafetyEventSeverity.HIGH,
-             "Loose electrical cable dangling near worker walkway — shock hazard", "Walkway B, Panel Room", -5, 72, "HIGH"),
+             "Loose electrical cable dangling near worker walkway â€” shock hazard", "Walkway B, Panel Room", -5, 72, "HIGH"),
             (0, SafetyEventType.NEAR_MISS, SafetyEventCategory.OPERATIONS, SafetyEventSeverity.HIGH,
-             "Excavator boom struck overhead power line — no injuries", "Section C, OB Dump", -8, 78, "HIGH"),
+             "Excavator boom struck overhead power line â€” no injuries", "Section C, OB Dump", -8, 78, "HIGH"),
             (2, SafetyEventType.UNSAFE_CONDITION, SafetyEventCategory.SAFETY, SafetyEventSeverity.HIGH,
-             "Emergency exit blocked by stored materials — fire escape compromised", "Loading Bay 2", -6, 70, "HIGH"),
+             "Emergency exit blocked by stored materials â€” fire escape compromised", "Loading Bay 2", -6, 70, "HIGH"),
             (1, SafetyEventType.INCIDENT, SafetyEventCategory.SAFETY, SafetyEventSeverity.HIGH,
-             "Worker slipped on wet surface near pump house — minor injury", "Pump House Access Path", -4, 65, "HIGH"),
+             "Worker slipped on wet surface near pump house â€” minor injury", "Pump House Access Path", -4, 65, "HIGH"),
             # MEDIUM (7)
             (0, SafetyEventType.HAZARD_OBSERVATION, SafetyEventCategory.SAFETY, SafetyEventSeverity.MEDIUM,
-             "Missing PPE observed — 3 workers without safety helmets", "Section A Entry Gate", -10, 45, "MEDIUM"),
+             "Missing PPE observed â€” 3 workers without safety helmets", "Section A Entry Gate", -10, 45, "MEDIUM"),
             (1, SafetyEventType.HAZARD_OBSERVATION, SafetyEventCategory.ENVIRONMENT, SafetyEventSeverity.MEDIUM,
              "Water accumulation in pit floor exceeding safe limits", "Pit C Floor", -12, 50, "MEDIUM"),
             (2, SafetyEventType.UNSAFE_CONDITION, SafetyEventCategory.SAFETY, SafetyEventSeverity.MEDIUM,
              "Inadequate barricading around blasting zone", "Blast Zone 2", -9, 48, "MEDIUM"),
             (0, SafetyEventType.HAZARD_OBSERVATION, SafetyEventCategory.SAFETY, SafetyEventSeverity.MEDIUM,
-             "Poor illumination in underground gallery — visibility below standard", "Gallery 7", -15, 42, "MEDIUM"),
+             "Poor illumination in underground gallery â€” visibility below standard", "Gallery 7", -15, 42, "MEDIUM"),
             (1, SafetyEventType.UNSAFE_CONDITION, SafetyEventCategory.OPERATIONS, SafetyEventSeverity.MEDIUM,
              "Unstable material storage near haul road", "OB Dump Area", -11, 47, "MEDIUM"),
             (2, SafetyEventType.NEAR_MISS, SafetyEventCategory.SAFETY, SafetyEventSeverity.MEDIUM,
@@ -242,15 +233,15 @@ async def seed_demo():
              "Inadequate safety signage at conveyor crossing", "Conveyor Crossing 2", -13, 40, "MEDIUM"),
             # LOW (6)
             (0, SafetyEventType.HAZARD_OBSERVATION, SafetyEventCategory.SAFETY, SafetyEventSeverity.LOW,
-             "Minor oil spill near equipment parking — contained quickly", "Equipment Yard", -20, 18, "LOW"),
+             "Minor oil spill near equipment parking â€” contained quickly", "Equipment Yard", -20, 18, "LOW"),
             (1, SafetyEventType.HAZARD_OBSERVATION, SafetyEventCategory.ENVIRONMENT, SafetyEventSeverity.LOW,
              "Dust levels slightly above normal during dry season", "Haul Road 3", -18, 22, "LOW"),
             (2, SafetyEventType.HAZARD_OBSERVATION, SafetyEventCategory.SAFETY, SafetyEventSeverity.LOW,
              "Fire extinguisher past inspection date in office block", "Admin Block", -25, 15, "LOW"),
             (0, SafetyEventType.HAZARD_OBSERVATION, SafetyEventCategory.OPERATIONS, SafetyEventSeverity.LOW,
-             "Minor equipment vibration anomaly — logged for monitoring", "Crusher Unit 1", -22, 20, "LOW"),
+             "Minor equipment vibration anomaly â€” logged for monitoring", "Crusher Unit 1", -22, 20, "LOW"),
             (1, SafetyEventType.HAZARD_OBSERVATION, SafetyEventCategory.SAFETY, SafetyEventSeverity.LOW,
-             "First aid kit missing supplies — restocked", "Control Room", -16, 12, "LOW"),
+             "First aid kit missing supplies â€” restocked", "Control Room", -16, 12, "LOW"),
             (2, SafetyEventType.HAZARD_OBSERVATION, SafetyEventCategory.ENVIRONMENT, SafetyEventSeverity.LOW,
              "Noise levels at boundary marginally above limit during blasting", "Boundary Wall East", -14, 25, "LOW"),
         ]
@@ -293,7 +284,7 @@ async def seed_demo():
             (0, None, 4, "Install height barriers near overhead power lines", ActionStatus.OPEN, -8, 10),
             (2, None, 5, "Clear stored materials from emergency exit and install locks", ActionStatus.RESOLVED, -6, 2),
             (1, None, 6, "Install anti-slip matting and drainage near pump house", ActionStatus.IN_PROGRESS, -4, 5),
-            (0, None, 7, "Enforce PPE compliance — issue warnings to defaulters", ActionStatus.CLOSED, -10, 3),
+            (0, None, 7, "Enforce PPE compliance â€” issue warnings to defaulters", ActionStatus.CLOSED, -10, 3),
             (1, None, 8, "Deploy additional pumps for pit floor dewatering", ActionStatus.IN_PROGRESS, -12, 8),
             (2, None, 9, "Upgrade barricading to DGMS standards at blast zone", ActionStatus.ASSIGNED, -9, 6),
             (0, None, 10, "Install additional lighting in Gallery 7", ActionStatus.OPEN, -15, 10),
@@ -302,8 +293,8 @@ async def seed_demo():
             (0, None, 13, "Install proper signage at all conveyor crossings", ActionStatus.ASSIGNED, -13, 5),
             # From inspections
             (0, 3, None, "Replace worn conveyor belt section identified in routine inspection", ActionStatus.IN_PROGRESS, -7, 5),
-            (0, 4, None, "Clear and maintain emergency exits — re-inspect within 48 hours", ActionStatus.OPEN, -3, 2),
-            (0, 5, None, "Tighten electrical panel wiring — schedule licensed electrician", ActionStatus.ASSIGNED, -1, 3),
+            (0, 4, None, "Clear and maintain emergency exits â€” re-inspect within 48 hours", ActionStatus.OPEN, -3, 2),
+            (0, 5, None, "Tighten electrical panel wiring â€” schedule licensed electrician", ActionStatus.ASSIGNED, -1, 3),
             (1, 9, None, "Rebuild barricading at Pit C per DGMS guidelines", ActionStatus.IN_PROGRESS, -10, 8),
             (1, 10, None, "Grade and resurface haul road section", ActionStatus.OPEN, -5, 10),
             # Overdue corrective actions
@@ -397,24 +388,24 @@ async def seed_demo():
         # ================================================================
         print("[7/12] Creating environmental data...")
         env_templates = [
-            (0, "Dust (PM10)", 145.0, "µg/m³", True),   # slightly high
-            (0, "Dust (PM10)", 95.0, "µg/m³", True),
+            (0, "Dust (PM10)", 145.0, "Âµg/mÂ³", True),   # slightly high
+            (0, "Dust (PM10)", 95.0, "Âµg/mÂ³", True),
             (0, "Noise", 82.0, "dB(A)", True),
-            (0, "Air Quality (SO2)", 35.0, "µg/m³", True),
+            (0, "Air Quality (SO2)", 35.0, "Âµg/mÂ³", True),
             (0, "Water Quality (pH)", 6.8, "pH", True),
-            (0, "Temperature", 38.5, "°C", True),       # high
-            (1, "Dust (PM10)", 180.0, "µg/m³", True),   # ALERT — above threshold
+            (0, "Temperature", 38.5, "Â°C", True),       # high
+            (1, "Dust (PM10)", 180.0, "Âµg/mÂ³", True),   # ALERT â€” above threshold
             (1, "Noise", 78.0, "dB(A)", True),
-            (1, "Air Quality (SO2)", 22.0, "µg/m³", True),
+            (1, "Air Quality (SO2)", 22.0, "Âµg/mÂ³", True),
             (1, "Water Quality (pH)", 7.2, "pH", True),
             (1, "Rainfall", 85.0, "mm", True),          # heavy
-            (1, "Temperature", 34.2, "°C", True),
-            (2, "Dust (PM10)", 110.0, "µg/m³", True),
-            (2, "Noise", 88.0, "dB(A)", True),          # ALERT — above limit
-            (2, "Air Quality (SO2)", 45.0, "µg/m³", True),  # elevated
-            (2, "Water Quality (pH)", 5.5, "pH", True),     # acidic — alert
+            (1, "Temperature", 34.2, "Â°C", True),
+            (2, "Dust (PM10)", 110.0, "Âµg/mÂ³", True),
+            (2, "Noise", 88.0, "dB(A)", True),          # ALERT â€” above limit
+            (2, "Air Quality (SO2)", 45.0, "Âµg/mÂ³", True),  # elevated
+            (2, "Water Quality (pH)", 5.5, "pH", True),     # acidic â€” alert
             (2, "Rainfall", 120.0, "mm", True),             # very heavy
-            (2, "Temperature", 36.0, "°C", True),
+            (2, "Temperature", 36.0, "Â°C", True),
         ]
         for mi, param, val, unit, sim in env_templates:
             s.add(EnvironmentReading(mine_id=mines[mi].id, parameter=param, value=val, unit=unit, is_simulated=sim))
@@ -479,14 +470,14 @@ async def seed_demo():
         # ================================================================
         print("[10/12] Creating grievances...")
         grievance_data = [
-            (0, "Safety concern — inadequate lighting in underground section", "Workers report poor visibility in Gallery 7 during night shift.", "Safety", GrievanceStatus.INVESTIGATING),
-            (0, "Sanitation issue — no clean drinking water at Pit B", "Drinking water facility has been non-functional for 3 days.", "Infrastructure", GrievanceStatus.PENDING),
-            (1, "Contractor concern — SafeBlast workers lack valid training certificates", "Multiple blasting crew members have expired certifications.", "Workforce", GrievanceStatus.INVESTIGATING),
-            (1, "Environmental concern — excessive dust on haul roads", "Community members near Durgapur mine report respiratory issues.", "Environmental", GrievanceStatus.PENDING),
-            (2, "Workplace infrastructure — broken safety railing", "Safety railing near loading bay damaged and not repaired.", "Infrastructure", GrievanceStatus.RESOLVED),
-            (0, "Safety concern — night shift inadequate supervision", "Only 1 supervisor for 30 workers during night operations.", "Safety", GrievanceStatus.PENDING),
-            (1, "Environmental concern — noise during residential hours", "Blasting conducted after permitted hours on 3 occasions.", "Environmental", GrievanceStatus.INVESTIGATING),
-            (2, "Contractor concern — delayed wage payments", "Workers of Bharat Earth Movers report 2-month salary delay.", "Workforce", GrievanceStatus.PENDING),
+            (0, "Safety concern â€” inadequate lighting in underground section", "Workers report poor visibility in Gallery 7 during night shift.", "Safety", GrievanceStatus.INVESTIGATING),
+            (0, "Sanitation issue â€” no clean drinking water at Pit B", "Drinking water facility has been non-functional for 3 days.", "Infrastructure", GrievanceStatus.PENDING),
+            (1, "Contractor concern â€” SafeBlast workers lack valid training certificates", "Multiple blasting crew members have expired certifications.", "Workforce", GrievanceStatus.INVESTIGATING),
+            (1, "Environmental concern â€” excessive dust on haul roads", "Community members near Durgapur mine report respiratory issues.", "Environmental", GrievanceStatus.PENDING),
+            (2, "Workplace infrastructure â€” broken safety railing", "Safety railing near loading bay damaged and not repaired.", "Infrastructure", GrievanceStatus.RESOLVED),
+            (0, "Safety concern â€” night shift inadequate supervision", "Only 1 supervisor for 30 workers during night operations.", "Safety", GrievanceStatus.PENDING),
+            (1, "Environmental concern â€” noise during residential hours", "Blasting conducted after permitted hours on 3 occasions.", "Environmental", GrievanceStatus.INVESTIGATING),
+            (2, "Contractor concern â€” delayed wage payments", "Workers of Bharat Earth Movers report 2-month salary delay.", "Workforce", GrievanceStatus.PENDING),
         ]
         for mi, title, desc, cat, status in grievance_data:
             s.add(Grievance(
@@ -511,8 +502,8 @@ async def seed_demo():
                 ))
 
         # Anomaly events
-        s.add(AnomalyEvent(mine_id=mines[0].id, what_was_abnormal="Dust PM10 spike to 145 µg/m³",
-                           baseline_reference="Normal: 80-100 µg/m³", observed_value="145 µg/m³",
+        s.add(AnomalyEvent(mine_id=mines[0].id, what_was_abnormal="Dust PM10 spike to 145 Âµg/mÂ³",
+                           baseline_reference="Normal: 80-100 Âµg/mÂ³", observed_value="145 Âµg/mÂ³",
                            anomaly_signal="ENVIRONMENTAL_SPIKE", timestamp=_dt(-2)))
         s.add(AnomalyEvent(mine_id=mines[1].id, what_was_abnormal="3 safety events in 48 hours",
                            baseline_reference="Avg: 1 event per week", observed_value="3 events in 2 days",
@@ -538,14 +529,14 @@ async def seed_demo():
         # ================================================================
         print("[12/12] Creating notifications and audit trail...")
         notif_templates = [
-            (mgr.id, "🔴 CRITICAL: Conveyor Belt Failure", "A critical incident — conveyor belt snapped at Section A. Immediate corrective action required.", "CRITICAL_FINDING", "SafetyEvent", safety_events[0].id),
-            (mgr.id, "🔴 CRITICAL: Highwall Instability", "Unstable highwall detected at Pit B North Face. Exclusion zone established.", "CRITICAL_FINDING", "SafetyEvent", safety_events[1].id),
-            (mgr.id, "⚠️ Inspection Overdue", "DGMS statutory inspection is 45 days overdue for Raniganj Central Mine.", "DEADLINE_APPROACHING", "Inspection", inspections[16].id),
-            (mgr.id, "⚠️ Corrective Action Overdue", "Root cause analysis for conveyor failure is 5 days past due date.", "DEADLINE_APPROACHING", "CorrectiveAction", corrective_actions[19].id),
-            (safety_officer.id, "📋 New Near Miss Report", "Haul truck near-miss at Junction 4. Please review and assign corrective actions.", "NEW_SUBMISSION", "SafetyEvent", safety_events[2].id),
-            (env_officer.id, "🌡️ Environmental Alert", "Dust PM10 levels at Durgapur mine reached 180 µg/m³ — above 150 µg/m³ threshold.", "THRESHOLD_EXCEEDED", "EnvironmentReading", None),
-            (mgr.id, "📊 Compliance Review Required", "Monthly air quality assessment is due in 3 days for Raniganj Central Mine.", "DEADLINE_APPROACHING", "ComplianceRecord", comp_records[2].id if len(comp_records) > 2 else None),
-            (users["manager.durgapur@coalmine.gov.in"].id, "⚠️ Worker Injury Report", "Worker slipped near pump house. Medical review and DGMS report required.", "CRITICAL_FINDING", "SafetyEvent", safety_events[6].id),
+            (mgr.id, "ðŸ”´ CRITICAL: Conveyor Belt Failure", "A critical incident â€” conveyor belt snapped at Section A. Immediate corrective action required.", "CRITICAL_FINDING", "SafetyEvent", safety_events[0].id),
+            (mgr.id, "ðŸ”´ CRITICAL: Highwall Instability", "Unstable highwall detected at Pit B North Face. Exclusion zone established.", "CRITICAL_FINDING", "SafetyEvent", safety_events[1].id),
+            (mgr.id, "âš ï¸ Inspection Overdue", "DGMS statutory inspection is 45 days overdue for Raniganj Central Mine.", "DEADLINE_APPROACHING", "Inspection", inspections[16].id),
+            (mgr.id, "âš ï¸ Corrective Action Overdue", "Root cause analysis for conveyor failure is 5 days past due date.", "DEADLINE_APPROACHING", "CorrectiveAction", corrective_actions[19].id),
+            (safety_officer.id, "ðŸ“‹ New Near Miss Report", "Haul truck near-miss at Junction 4. Please review and assign corrective actions.", "NEW_SUBMISSION", "SafetyEvent", safety_events[2].id),
+            (env_officer.id, "ðŸŒ¡ï¸ Environmental Alert", "Dust PM10 levels at Durgapur mine reached 180 Âµg/mÂ³ â€” above 150 Âµg/mÂ³ threshold.", "THRESHOLD_EXCEEDED", "EnvironmentReading", None),
+            (mgr.id, "ðŸ“Š Compliance Review Required", "Monthly air quality assessment is due in 3 days for Raniganj Central Mine.", "DEADLINE_APPROACHING", "ComplianceRecord", comp_records[2].id if len(comp_records) > 2 else None),
+            (users["manager.durgapur@coalmine.gov.in"].id, "âš ï¸ Worker Injury Report", "Worker slipped near pump house. Medical review and DGMS report required.", "CRITICAL_FINDING", "SafetyEvent", safety_events[6].id),
         ]
         for uid, title, msg, ntype, etype, eid in notif_templates:
             s.add(Notification(
@@ -624,3 +615,5 @@ async def seed_demo():
 
 if __name__ == "__main__":
     asyncio.run(seed_demo())
+
+

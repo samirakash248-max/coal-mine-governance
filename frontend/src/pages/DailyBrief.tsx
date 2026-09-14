@@ -1,16 +1,71 @@
-import { AlertTriangle, Info, CheckCircle, Lightbulb } from 'lucide-react';
+﻿import { useState, useEffect } from 'react';
+import { AlertTriangle, Info, CheckCircle, Lightbulb, RefreshCw, Loader2, AlertCircle } from 'lucide-react';
 import { useDailyBrief } from '../hooks/useCopilot';
+import { Button } from '../components/ui/button';
 
 export default function DailyBrief() {
-  const { data, isLoading, isError } = useDailyBrief();
+  const { data, isLoading, isError, refetch, error } = useDailyBrief();
+  const [loadingStep, setLoadingStep] = useState(0);
 
-  if (isLoading) return <div className="p-6 text-gray-500">Loading daily brief...</div>;
-  if (isError || !data) return <div className="p-6 text-red-500">Failed to load daily brief.</div>;
+  const loadingMessages = [
+    "Compiling daily governance data...",
+    "AI is analyzing recent safety events...",
+    "Extracting critical compliance issues...",
+    "Generating actionable recommendations...",
+    "Almost finished..."
+  ];
+
+  useEffect(() => {
+    let interval: any;
+    if (isLoading) {
+      interval = setInterval(() => {
+        setLoadingStep((prev) => (prev < loadingMessages.length - 1 ? prev + 1 : prev));
+      }, 5000); // Change message every 5 seconds
+    } else {
+      setLoadingStep(0);
+    }
+    return () => clearInterval(interval);
+  }, [isLoading]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-gray-500 space-y-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="text-lg font-medium">{loadingMessages[loadingStep]}</p>
+        <p className="text-sm text-gray-400 max-w-md text-center">
+          This operation requires deep context analysis and may take up to a minute.
+        </p>
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    const isTimeout = error?.message?.toLowerCase().includes('timeout') || error?.message?.toLowerCase().includes('network');
+    
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-red-500 space-y-4">
+        <AlertCircle className="w-12 h-12 text-red-400" />
+        <p className="text-lg font-medium text-gray-900">
+          {isTimeout 
+            ? "AI analysis is taking longer than expected." 
+            : "The governance service is temporarily unavailable."}
+        </p>
+        <p className="text-sm text-gray-500 max-w-md text-center">
+          {isTimeout 
+            ? "The backend AI model might be cold-starting or overwhelmed. Please try again."
+            : "An unexpected error occurred while generating your brief. Please verify your connection or try again."}
+        </p>
+        <Button onClick={() => refetch()} variant="outline" className="mt-4">
+          <RefreshCw className="w-4 h-4 mr-2" /> Retry Analysis
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-graphite-900">Daily Governance Brief</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Daily Governance Brief</h1>
         <div className="text-sm text-gray-500">{new Date().toLocaleDateString()}</div>
       </div>
 
@@ -69,8 +124,8 @@ export default function DailyBrief() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-primary-200 shadow-sm overflow-hidden">
-          <div className="bg-primary-50 px-4 py-3 border-b border-primary-200 flex items-center gap-2 text-primary-800 font-semibold">
+        <div className="bg-white rounded-lg border border-blue-200 shadow-sm overflow-hidden">
+          <div className="bg-blue-50 px-4 py-3 border-b border-blue-200 flex items-center gap-2 text-blue-800 font-semibold">
             <Lightbulb size={18} /> AI Recommendations
           </div>
           <div className="p-4 space-y-3">
@@ -79,7 +134,7 @@ export default function DailyBrief() {
             ) : (
               data.recommendations.map((rec, idx) => (
                 <div key={idx} className="flex gap-2 text-sm text-gray-700">
-                  <div className="mt-0.5 text-primary-500">•</div>
+                  <div className="mt-0.5 text-blue-500">•</div>
                   <div>{rec.description || rec.title || JSON.stringify(rec)}</div>
                 </div>
               ))

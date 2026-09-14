@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+﻿from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List, Optional
 import warnings
 import os
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     AI_BASE_URL: str = "http://127.0.0.1:8001/v1"
     AI_MODEL: str = "coal-gov-qwen3-4b"
     AI_TIMEOUT: float = 30.0
-    WEATHER_PROVIDER: str = "mock"
+    WEATHER_PROVIDER: str = "real"
     OCR_PROVIDER: str = "mock"
     STORAGE_PROVIDER: str = "local"
     
@@ -68,3 +68,4 @@ def get_settings() -> Settings:
         settings.DATABASE_URL = "sqlite+aiosqlite:///./coalmine.db"
         
     return settings
+

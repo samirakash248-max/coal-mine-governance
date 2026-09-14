@@ -1,5 +1,5 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiClient } from '../api/client';
+﻿import { useQuery, useMutation } from '@tanstack/react-query';
+import { aiApiClient } from '../api/client';
 
 export interface CopilotMessage {
   role: 'user' | 'assistant';
@@ -32,9 +32,11 @@ export interface CopilotChatResponse {
 export const useCopilotChat = () => {
   return useMutation<CopilotChatResponse, Error, CopilotChatPayload>({
     mutationFn: async (payload) => {
-      const response = await apiClient.post('/api/v1/copilot/chat', payload);
+      // Use aiApiClient for longer timeout tolerance
+      const response = await aiApiClient.post('/api/v1/copilot/chat', payload);
       return response.data;
     },
+    retry: false, // Do not blindly retry expensive mutations
   });
 };
 
@@ -49,8 +51,12 @@ export const useDailyBrief = () => {
   return useQuery<DailyBriefResponse, Error>({
     queryKey: ['daily-brief'],
     queryFn: async () => {
-      const response = await apiClient.get('/api/v1/copilot/daily-brief');
+      // Use aiApiClient for longer timeout tolerance
+      const response = await aiApiClient.get('/api/v1/copilot/daily-brief');
       return response.data;
     },
+    retry: false, // Prevent React Query from hammering the backend on timeout
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes to avoid redundant heavy generation
   });
 };
+

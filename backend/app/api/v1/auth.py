@@ -1,4 +1,4 @@
-import httpx
+﻿import httpx
 import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -11,7 +11,7 @@ from app.database import get_db
 from app.config import get_settings, Settings
 from app.core.security import verify_password, create_access_token, hash_password
 from app.models.user import User, Role
-from app.schemas.auth import Token, GoogleAuthCallback, ChangePasswordRequest
+from app.schemas.auth import Token, GoogleAuthCallback, ChangePasswordRequest, SignupRequest
 from app.schemas.user import UserResponse, UserUpdateMe
 from app.api.deps import get_current_user
 
@@ -134,6 +134,28 @@ async def google_auth_callback(
     
     return {"access_token": app_access_token, "token_type": "bearer"}
 
+
+@router.post("/signup", response_model=UserResponse)
+async def signup(
+    payload: SignupRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(User).where(User.email == payload.email))
+    if result.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Email already registered")
+        
+    user = User(
+        email=payload.email,
+        full_name=payload.full_name,
+        hashed_password=hash_password(payload.password),
+        role=Role.MINE_OFFICER,
+        is_active=True
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user
+
 @router.post("/logout")
 async def logout():
     return {"message": "Successfully logged out"}
@@ -172,3 +194,4 @@ async def change_password(
     current_user.hashed_password = hash_password(payload.new_password)
     await db.commit()
     return None
+

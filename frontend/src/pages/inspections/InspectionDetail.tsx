@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
@@ -11,20 +11,23 @@ export default function InspectionDetail() {
   const [findings, setFindings] = useState<any[]>([]);
   const [actions, setActions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setError(null);
         const [inspRes, findRes, actRes] = await Promise.all([
-          api.get(`/inspections/${id}`),
-          api.get(`/inspections/${id}/findings`),
-          api.get(`/inspections/${id}/actions`)
+          api.get(`/api/v1/inspections/${id}`),
+          api.get(`/api/v1/inspections/${id}/findings`),
+          api.get(`/api/v1/inspections/${id}/actions`)
         ]);
         setInspection(inspRes.data);
         setFindings(findRes.data);
         setActions(actRes.data);
-      } catch (error) {
-        console.error('Failed to load inspection details', error);
+      } catch (err: any) {
+        console.error('Failed to load inspection details', err);
+        setError(err.response?.data?.detail || err.message || 'Failed to load inspection details');
       } finally {
         setLoading(false);
       }
@@ -33,13 +36,14 @@ export default function InspectionDetail() {
   }, [id]);
 
   if (loading) return <div className="p-6">Loading...</div>;
+  if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
   if (!inspection) return <div className="p-6">Not Found</div>;
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Inspection #{id}</h1>
-        <button onClick={() => navigate('/inspections')} className="text-blue-600 hover:underline">
+        <h1 className="text-2xl font-bold truncate">Inspection #{id}</h1>
+        <button onClick={() => navigate('/inspections')} className="text-blue-600 hover:underline shrink-0">
           Back to List
         </button>
       </div>
@@ -52,20 +56,20 @@ export default function InspectionDetail() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <p className="text-sm text-gray-500">Date</p>
-              <p className="font-semibold">{inspection.date}</p>
+              <p className="font-semibold">{inspection.date ? new Date(inspection.date).toLocaleString() : 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Mine ID</p>
-              <p className="font-semibold">{inspection.mineId}</p>
+              <p className="font-semibold truncate" title={inspection.mine_id}>{inspection.mine_id || 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Inspector</p>
-              <p className="font-semibold">{inspection.inspector}</p>
+              <p className="font-semibold truncate" title={inspection.inspector_id}>{inspection.inspector_id || 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Status</p>
-              <Badge variant={inspection.status === 'COMPLETED' ? 'default' : 'default'}>
-                {inspection.status}
+              <Badge variant={inspection.status === 'COMPLETED' ? 'default' : 'secondary'}>
+                {inspection.status || 'N/A'}
               </Badge>
             </div>
           </div>
@@ -82,11 +86,13 @@ export default function InspectionDetail() {
               <ul className="space-y-4">
                 {findings.map((f, i) => (
                   <li key={i} className="border-b pb-2">
-                    <p className="font-medium">{f.title}</p>
+                    <p className="font-medium">{f.type || f.category || 'Finding'}</p>
                     <p className="text-sm text-gray-600">{f.description}</p>
-                    <Badge variant={f.severity === 'HIGH' ? 'destructive' : 'destructive'} className="mt-1">
-                      {f.severity}
-                    </Badge>
+                    {f.severity && (
+                      <Badge variant={f.severity === 'HIGH' || f.severity === 'CRITICAL' ? 'destructive' : 'secondary'} className="mt-1">
+                        {f.severity}
+                      </Badge>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -103,11 +109,13 @@ export default function InspectionDetail() {
               <ul className="space-y-4">
                 {actions.map((a, i) => (
                   <li key={i} className="border-b pb-2">
-                    <p className="font-medium">{a.title}</p>
-                    <p className="text-sm text-gray-600">Due: {a.dueDate}</p>
-                    <Badge variant={a.status === 'CLOSED' ? 'default' : 'default'} className="mt-1">
-                      {a.status}
-                    </Badge>
+                    <p className="font-medium whitespace-pre-wrap">{a.description}</p>
+                    <p className="text-sm text-gray-600">Due: {a.due_date ? new Date(a.due_date).toLocaleDateString() : 'N/A'}</p>
+                    {a.status && (
+                      <Badge variant={a.status === 'CLOSED' ? 'default' : 'secondary'} className="mt-1">
+                        {a.status}
+                      </Badge>
+                    )}
                   </li>
                 ))}
               </ul>

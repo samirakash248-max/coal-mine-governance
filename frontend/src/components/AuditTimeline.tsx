@@ -1,5 +1,5 @@
-
-import { useAudit, AuditLog } from '../hooks/useAudit';
+﻿
+import { useEntityAuditLogs as useAudit, AuditLog } from '../hooks/useAudit';
 import { clsx } from 'clsx';
 import { Activity, CheckCircle, AlertTriangle, Edit2, PlusCircle } from 'lucide-react';
 
@@ -68,7 +68,7 @@ export function AuditTimeline({ entityType, entityId }: AuditTimelineProps) {
                     <p className="text-sm text-gray-500">
                       <span className="font-medium text-gray-900">{log.action}</span> by{' '}
                       <span className="font-medium text-gray-900">
-                        {log.user_name || log.user_id} {log.role && `(${log.role})`}
+                        {log.user_id} {log.role && `(${log.role})`}
                       </span>
                     </p>
                   </div>
@@ -84,3 +84,4 @@ export function AuditTimeline({ entityType, entityId }: AuditTimelineProps) {
     </div>
   );
 }
+

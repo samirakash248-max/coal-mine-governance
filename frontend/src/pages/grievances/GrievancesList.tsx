@@ -1,12 +1,12 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useGrievances } from '../../hooks/useGrievances';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Sparkles, Plus, MessageSquare } from 'lucide-react';
+import { Sparkles, Plus, MessageSquare, AlertCircle } from 'lucide-react';
 
 export default function GrievancesList() {
-  const { grievances, isLoading, createGrievance, applyAiSuggestions } = useGrievances();
+  const { grievances, isLoading, isError, createGrievance, applyAiSuggestions } = useGrievances();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -24,7 +24,20 @@ export default function GrievancesList() {
     }
   };
 
-  if (isLoading) return <div className="p-6">Loading grievances...</div>;
+  if (isLoading) return <div className="p-6 text-gray-500">Loading grievances...</div>;
+
+  if (isError) {
+    return (
+      <div className="p-6">
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-6 flex items-center text-red-700">
+            <AlertCircle className="w-5 h-5 mr-3" />
+            <p>Failed to load grievances. Please try again or contact support if the issue persists.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -96,7 +109,10 @@ export default function GrievancesList() {
                         <Button 
                           size="sm" 
                           variant="secondary"
-                          onClick={() => applyAiSuggestions.mutate(grievance.id)}
+                          onClick={() => applyAiSuggestions.mutate({ 
+                            id: grievance.id, 
+                            category: grievance.ai_suggestions.suggested_category 
+                          })}
                           disabled={applyAiSuggestions.isPending}
                           className="bg-amber-100 hover:bg-amber-200 text-amber-700 border-0"
                         >

@@ -1,11 +1,14 @@
-import { RouterProvider } from 'react-router-dom';
+﻿import { RouterProvider } from 'react-router-dom';
 import { AppProviders } from './providers/AppProviders';
 import { router } from './router';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 function App() {
   return (
     <AppProviders>
-      <RouterProvider router={router} />
+      <ErrorBoundary>
+        <RouterProvider router={router} />
+      </ErrorBoundary>
     </AppProviders>
   );
 }

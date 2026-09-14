@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+﻿import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 
 export interface Grievance {
@@ -19,9 +19,9 @@ export interface Grievance {
 }
 
 export function useGrievances() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
-  const { data: grievances, isLoading } = useQuery({
+  const { data: grievances, isLoading, isError } = useQuery({
     queryKey: ['grievances'],
     queryFn: async () => {
       const { data } = await apiClient.get<Grievance[]>('/api/v1/grievances');
@@ -40,8 +40,10 @@ export function useGrievances() {
   });
 
   const applyAiSuggestions = useMutation({
-    mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<Grievance>(`/api/v1/grievances/${id}/apply-ai`);
+    mutationFn: async (payload: { id: string; category: string }) => {
+      const { data } = await apiClient.put<Grievance>(`/api/v1/grievances/${payload.id}/apply-ai`, {
+        category: payload.category
+      });
       return data;
     },
     onSuccess: () => {
@@ -52,6 +54,7 @@ export function useGrievances() {
   return {
     grievances,
     isLoading,
+    isError,
     createGrievance,
     applyAiSuggestions,
   };

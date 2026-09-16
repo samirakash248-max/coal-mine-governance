@@ -9,7 +9,7 @@ from .base import BaseModel
 class RiskHistory(BaseModel):
     __tablename__ = "risk_history"
     
-    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), nullable=False)
+    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), index=True, nullable=False)
     score: Mapped[int] = mapped_column(Integer, nullable=False) # 0 to 100
     factors: Mapped[dict] = mapped_column(JSONB, nullable=False) # Explainable factors
     evaluated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -17,7 +17,7 @@ class RiskHistory(BaseModel):
 class AnomalyEvent(BaseModel):
     __tablename__ = "anomaly_events"
     
-    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), nullable=False)
+    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), index=True, nullable=False)
     what_was_abnormal: Mapped[str] = mapped_column(String(255), nullable=False)
     baseline_reference: Mapped[str] = mapped_column(String(255), nullable=False)
     observed_value: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -27,7 +27,7 @@ class AnomalyEvent(BaseModel):
 class RecurringIssue(BaseModel):
     __tablename__ = "recurring_issues"
     
-    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), nullable=False)
+    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), index=True, nullable=False)
     recurrence_count: Mapped[int] = mapped_column(Integer, nullable=False)
     time_window_days: Mapped[int] = mapped_column(Integer, nullable=False)
     location_details: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)

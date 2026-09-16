@@ -61,73 +61,73 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      {
+            {
         index: true,
         element: <Navigate to="/dashboard" replace />,
       },
       {
         path: 'dashboard',
-        element: <Dashboard />,
+        element: <ProtectedRoute requiredPermission="dashboard:read"><Dashboard /></ProtectedRoute>,
       },
       {
         path: 'daily-brief',
-        element: <DailyBrief />,
+        element: <ProtectedRoute requiredPermission="dashboard:read"><DailyBrief /></ProtectedRoute>,
       },
       {
         path: 'gis',
-        element: <GovernanceMap />,
+        element: <ProtectedRoute requiredPermission="mine:read"><GovernanceMap /></ProtectedRoute>,
       },
       {
         path: 'mines',
-        element: <MineList />,
+        element: <ProtectedRoute requiredPermission="mine:read"><MineList /></ProtectedRoute>,
       },
       {
         path: 'mines/:id',
-        element: <MineDetail />,
+        element: <ProtectedRoute requiredPermission="mine:read"><MineDetail /></ProtectedRoute>,
       },
       {
         path: 'compliance/calendar',
-        element: <Calendar />,
+        element: <ProtectedRoute requiredPermission="compliance:read"><Calendar /></ProtectedRoute>,
       },
       {
         path: 'field/report',
-        element: <ReportEvent />,
+        element: <ProtectedRoute requiredPermission="safety:create"><ReportEvent /></ProtectedRoute>,
       },
       {
         path: 'field/actions',
-        element: <CorrectiveActions />,
+        element: <ProtectedRoute requiredPermission="safety:read"><CorrectiveActions /></ProtectedRoute>,
       },
       {
         path: 'documents',
-        element: <DocumentLibrary />,
+        element: <ProtectedRoute requiredPermission="document:read"><DocumentLibrary /></ProtectedRoute>,
       },
       {
         path: 'documents/:id/verify',
-        element: <VerifyDocument />,
+        element: <ProtectedRoute requiredPermission="document:verify"><VerifyDocument /></ProtectedRoute>,
       },
       {
         path: 'grievances',
-        element: <GrievancesList />,
+        element: <ProtectedRoute requiredPermission="grievance:read"><GrievancesList /></ProtectedRoute>,
       },
       {
         path: 'analytics',
-        element: <ExecutiveDashboard />,
+        element: <ProtectedRoute requiredPermission="report:read"><ExecutiveDashboard /></ProtectedRoute>,
       },
       {
         path: 'reports',
-        element: <ReportsManager />,
+        element: <ProtectedRoute requiredPermission="report:read"><ReportsManager /></ProtectedRoute>,
       },
-            {
+      {
         path: 'risk',
-        element: <RiskIntelligence />,
+        element: <ProtectedRoute requiredPermission="risk:read"><RiskIntelligence /></ProtectedRoute>,
       },
       {
         path: 'audit',
-        element: <AuditTrail />,
+        element: <ProtectedRoute requiredPermission="audit:read"><AuditTrail /></ProtectedRoute>,
       },
-            {
+      {
         path: 'weather',
-        element: <EnvironmentalIntelligence />,
+        element: <ProtectedRoute requiredPermission="weather:read"><EnvironmentalIntelligence /></ProtectedRoute>,
       },
       {
         path: 'settings',
@@ -135,30 +135,31 @@ export const router = createBrowserRouter([
       },
       {
         path: 'inspections',
-        element: <Inspections />,
+        element: <ProtectedRoute requiredPermission="inspection:read"><Inspections /></ProtectedRoute>,
       },
       {
         path: 'inspections/new',
-        element: <CreateInspection />,
+        element: <ProtectedRoute requiredPermission="inspection:create"><CreateInspection /></ProtectedRoute>,
       },
       {
         path: 'inspections/:id',
-        element: <InspectionDetail />,
+        element: <ProtectedRoute requiredPermission="inspection:read"><InspectionDetail /></ProtectedRoute>,
       },
       {
         path: 'safety',
-        element: <Safety />,
+        element: <ProtectedRoute requiredPermission="safety:read"><Safety /></ProtectedRoute>,
       },
       {
         path: 'safety/report-near-miss',
-        element: <ReportNearMiss />,
+        element: <ProtectedRoute requiredPermission="safety:create"><ReportNearMiss /></ProtectedRoute>,
       },
       {
         path: 'safety/:id',
-        element: <EventDetail />,
+        element: <ProtectedRoute requiredPermission="safety:read"><EventDetail /></ProtectedRoute>,
       },
     ],
   },
 ]);
+
 
 

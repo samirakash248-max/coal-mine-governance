@@ -14,13 +14,13 @@ class GrievanceStatus(str, Enum):
 
 class Grievance(BaseModel):
     __tablename__ = "grievances"
-    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), nullable=False)
-    submitter_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), index=True, nullable=False)
+    submitter_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     
     category: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    status: Mapped[GrievanceStatus] = mapped_column(SQLEnum(GrievanceStatus), default=GrievanceStatus.PENDING, nullable=False)
-    assigned_department_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("departments.id", ondelete="SET NULL"), nullable=True)
+    status: Mapped[GrievanceStatus] = mapped_column(SQLEnum(GrievanceStatus, native_enum=False, length=50), default=GrievanceStatus.PENDING, nullable=False)
+    assigned_department_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("departments.id", ondelete="SET NULL"), index=True, nullable=True)
     
     ai_suggestions: Mapped[dict] = mapped_column(JSONB, default={}, nullable=False)

@@ -9,7 +9,7 @@ from .base import BaseModel
 class Notification(BaseModel):
     __tablename__ = "notifications"
     
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
     notification_type: Mapped[str] = mapped_column(String(100), nullable=False) # e.g. ESCALATION, DEADLINE
@@ -28,7 +28,7 @@ class EscalationRule(BaseModel):
 class AuditLog(BaseModel):
     __tablename__ = "audit_logs"
     
-    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)
     role: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     action: Mapped[str] = mapped_column(String(100), nullable=False) # CREATE, UPDATE, ESCALATE, VERIFY
     entity_type: Mapped[str] = mapped_column(String(100), nullable=False)

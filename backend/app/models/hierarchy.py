@@ -17,7 +17,7 @@ class Organization(BaseModel):
 class Subsidiary(BaseModel):
     __tablename__ = "subsidiaries"
     
-    organization_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    organization_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     
     organization: Mapped["Organization"] = relationship(back_populates="subsidiaries")
@@ -26,7 +26,7 @@ class Subsidiary(BaseModel):
 class Region(BaseModel):
     __tablename__ = "regions"
     
-    subsidiary_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("subsidiaries.id", ondelete="CASCADE"), nullable=False)
+    subsidiary_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("subsidiaries.id", ondelete="CASCADE"), index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     
     subsidiary: Mapped["Subsidiary"] = relationship(back_populates="regions")
@@ -35,14 +35,14 @@ class Region(BaseModel):
 class Mine(BaseModel):
     __tablename__ = "mines"
     
-    region_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("regions.id", ondelete="CASCADE"), nullable=False)
+    region_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("regions.id", ondelete="CASCADE"), index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     latitude: Mapped[Optional[float]] = mapped_column(nullable=True)
     longitude: Mapped[Optional[float]] = mapped_column(nullable=True)
     location_geom = mapped_column(Geometry('POINT', srid=4326), nullable=True)
     status: Mapped[str] = mapped_column(String(50), default="active")
     mine_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # e.g., open_cast, underground
-    manager_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    manager_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)
     operational_metadata: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
     
     region: Mapped["Region"] = relationship(back_populates="mines")
@@ -51,7 +51,7 @@ class Mine(BaseModel):
 class Department(BaseModel):
     __tablename__ = "departments"
     
-    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), nullable=False)
+    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     
     mine: Mapped["Mine"] = relationship(back_populates="departments")

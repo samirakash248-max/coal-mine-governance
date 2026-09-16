@@ -77,9 +77,11 @@ export const CopilotDrawer: React.FC<CopilotDrawerProps> = ({ open, onClose }) =
                 {(msg as any).citations && (msg as any).citations.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-1">
                     {(msg as any).citations.map((c: any, idx: number) => (
-                      <span key={idx} className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 border border-gray-200">
-                        {c.title}
-                      </span>
+                      <div key={idx} className="text-[10px] bg-gray-100 p-1.5 rounded text-gray-700 border border-gray-200 shadow-sm flex flex-col gap-0.5">
+                        <span className="font-semibold text-gray-900">{c.title}</span>
+                        {c.section && <span>Section: {c.section}</span>}
+                        {c.page && <span>Page: {c.page}</span>}
+                      </div>
                     ))}
                   </div>
                 )}

@@ -6,7 +6,7 @@ from typing import List
 
 from app.database import get_db
 from app.models.user import User
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_pagination, PaginationParams
 from app.schemas.report import TrendDataPoint, RegionalCompareData
 from app.models.field import SafetyEvent, SafetyEventType
 from app.schemas.field import SafetyEventResponse

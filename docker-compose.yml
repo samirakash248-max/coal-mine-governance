@@ -58,10 +58,10 @@ services:
   frontend:
     build:
       context: ./frontend
+      args:
+        - VITE_API_URL=/api/v1
     ports:
       - "5173:80"
-    environment:
-      - VITE_API_URL=http://localhost:8002/api/v1
     depends_on:
       - backend
 

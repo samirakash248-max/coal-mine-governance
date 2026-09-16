@@ -1,4 +1,4 @@
-import uuid
+﻿import uuid
 from typing import Optional
 from pydantic import BaseModel, ConfigDict
 from app.models.user import Role
@@ -18,9 +18,11 @@ class UserCreate(UserBase):
     password: str
 
 class UserResponse(UserBase):
+    permissions: list[str] = []
     id: uuid.UUID
     
     model_config = ConfigDict(from_attributes=True)
 
 class UserUpdateMe(BaseModel):
     full_name: Optional[str] = None
+

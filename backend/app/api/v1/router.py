@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+﻿from fastapi import APIRouter, Depends
 from redis import asyncio as aioredis
 from sqlalchemy import text
 from app.api.deps import get_db, get_settings, get_ai_provider_dep, get_weather_provider_dep, get_ocr_provider_dep, get_storage_provider_dep
@@ -101,20 +101,26 @@ from app.api.v1.analytics import router as analytics_router
 
 from app.api.v1.inspections import router as inspections_router
 from app.api.v1.settings import router as settings_router
+from app.api.v1.users import router as users_router
+
+from app.api.deps import require_authenticated_user, require_permission
+from app.core.permissions import Permission
 
 api_router.include_router(auth_router, prefix="/auth", tags=["Auth"])
-api_router.include_router(hierarchy_router, prefix="/hierarchy", tags=["Hierarchy"])
-api_router.include_router(compliance_router, prefix="/compliance", tags=["Compliance"])
-api_router.include_router(dashboard_router, prefix="/dashboard", tags=["Dashboard"])
-api_router.include_router(field_router, prefix="/field", tags=["Field Operations"])
-api_router.include_router(notifications_router, prefix="/notifications", tags=["Notifications"])
-api_router.include_router(audit_router, prefix="/audit", tags=["Audit Trail"])
-api_router.include_router(weather_router, prefix="/weather", tags=["Weather"])
-api_router.include_router(documents_router, prefix="/documents", tags=["Documents"])
-api_router.include_router(copilot_router, prefix="/copilot", tags=["AI Copilot"])
-api_router.include_router(operations_router, prefix="/operations", tags=["Operations"])
-api_router.include_router(grievances_router, prefix="/grievances", tags=["Grievances"])
-api_router.include_router(reports_router, prefix="/reports", tags=["Reports"])
-api_router.include_router(analytics_router, prefix="/analytics", tags=["Analytics"])
-api_router.include_router(inspections_router, prefix="/inspections", tags=["Inspections"])
-api_router.include_router(settings_router, prefix="/settings", tags=["Settings"])
+api_router.include_router(hierarchy_router, prefix="/hierarchy", tags=["Hierarchy"], dependencies=[Depends(require_authenticated_user)])
+api_router.include_router(compliance_router, prefix="/compliance", tags=["Compliance"], dependencies=[Depends(require_permission(Permission.COMPLIANCE_READ))])
+api_router.include_router(dashboard_router, prefix="/dashboard", tags=["Dashboard"], dependencies=[Depends(require_permission(Permission.DASHBOARD_READ))])
+api_router.include_router(field_router, prefix="/field", tags=["Field Operations"], dependencies=[Depends(require_authenticated_user)])
+api_router.include_router(notifications_router, prefix="/notifications", tags=["Notifications"], dependencies=[Depends(require_authenticated_user)])
+api_router.include_router(audit_router, prefix="/audit", tags=["Audit Trail"], dependencies=[Depends(require_permission(Permission.AUDIT_READ))])
+api_router.include_router(weather_router, prefix="/weather", tags=["Weather"], dependencies=[Depends(require_permission(Permission.WEATHER_READ))])
+api_router.include_router(documents_router, prefix="/documents", tags=["Documents"], dependencies=[Depends(require_permission(Permission.DOCUMENT_READ))])
+api_router.include_router(copilot_router, prefix="/copilot", tags=["AI Copilot"], dependencies=[Depends(require_permission(Permission.COPILOT_USE))])
+api_router.include_router(operations_router, prefix="/operations", tags=["Operations"], dependencies=[Depends(require_authenticated_user)])
+api_router.include_router(grievances_router, prefix="/grievances", tags=["Grievances"], dependencies=[Depends(require_permission(Permission.GRIEVANCE_READ))])
+api_router.include_router(reports_router, prefix="/reports", tags=["Reports"], dependencies=[Depends(require_permission(Permission.REPORT_READ))])
+api_router.include_router(analytics_router, prefix="/analytics", tags=["Analytics"], dependencies=[Depends(require_authenticated_user)])
+api_router.include_router(inspections_router, prefix="/inspections", tags=["Inspections"], dependencies=[Depends(require_permission(Permission.INSPECTION_READ))])
+api_router.include_router(settings_router, prefix="/settings", tags=["Settings"], dependencies=[Depends(require_authenticated_user)])
+api_router.include_router(users_router, prefix="/users", tags=["Users"], dependencies=[Depends(require_authenticated_user)])
+

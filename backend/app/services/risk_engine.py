@@ -92,10 +92,20 @@ class RiskEngine:
         # Base score floor/ceiling
         score = min(max(score, 0), 100)
         
+        if score < 30:
+            level = "LOW"
+        elif score < 60:
+            level = "MEDIUM"
+        elif score < 80:
+            level = "HIGH"
+        else:
+            level = "CRITICAL"
+
+        
         history = RiskHistory(
             mine_id=mine_id,
             score=score,
-            factors={"explainable_factors": factors},
+            factors={"explainable_factors": factors, "risk_level": level},
             evaluated_at=now
         )
         self.db.add(history)

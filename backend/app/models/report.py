@@ -20,9 +20,9 @@ class ReportStatus(str, Enum):
 
 class Report(BaseModel):
     __tablename__ = "reports"
-    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), nullable=False)
+    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), index=True, nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
-    type: Mapped[ReportType] = mapped_column(SQLEnum(ReportType), nullable=False)
-    status: Mapped[ReportStatus] = mapped_column(SQLEnum(ReportStatus), default=ReportStatus.DRAFT, nullable=False)
+    type: Mapped[ReportType] = mapped_column(SQLEnum(ReportType, native_enum=False, length=50), nullable=False)
+    status: Mapped[ReportStatus] = mapped_column(SQLEnum(ReportStatus, native_enum=False, length=50), default=ReportStatus.DRAFT, nullable=False)
     data_snapshot: Mapped[dict] = mapped_column(JSONB, default={}, nullable=False)
-    generated_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    generated_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)

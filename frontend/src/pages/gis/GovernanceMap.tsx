@@ -1,5 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
+import { apiClient } from '../../api/client';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useMines } from '../../hooks/useMines';
@@ -17,16 +19,14 @@ L.Icon.Default.mergeOptions({
   shadowUrl,
 });
 
-// A dummy hook for weather risk since it's requested to stub it
 function useWeatherRisk(mineId: string) {
   const [risk, setRisk] = useState<string>('Loading...');
   
   useEffect(() => {
     if (!mineId) return;
     setRisk('Loading...');
-    fetch(`/api/v1/weather/risk/${mineId}`)
-      .then(res => res.json())
-      .then(data => setRisk(data?.level || 'MODERATE'))
+    apiClient.get(`/weather/risk/${mineId}`)
+      .then(res => setRisk(res.data?.level || 'MODERATE'))
       .catch(() => setRisk('MODERATE'));
   }, [mineId]);
   

@@ -66,6 +66,9 @@ def get_settings() -> Settings:
     if not settings.DATABASE_URL:
         warnings.warn("No PostgreSQL configuration found. Falling back to local SQLite.")
         settings.DATABASE_URL = "sqlite+aiosqlite:///./coalmine.db"
+
+    if not settings.DEBUG and settings.SECRET_KEY == "CHANGE_ME_IN_PRODUCTION":
+        warnings.warn("SECURITY WARNING: Using default SECRET_KEY in production! Please set SECRET_KEY environment variable.")
         
     return settings
 

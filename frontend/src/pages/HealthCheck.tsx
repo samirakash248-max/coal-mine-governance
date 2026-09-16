@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { HealthResponse } from '../types/api';
 import { StatusBadge } from '../components/ui/StatusBadge';
@@ -7,27 +6,14 @@ import { formatDateTime } from '../utils/format';
 
 export function HealthCheck() {
   // Using a mock health response if backend is not available yet for UI demonstration
-  const [useMock, setUseMock] = useState(false);
-  const { data, loading, error, refetch } = useApi<HealthResponse>('/health', { immediate: !useMock });
+    const { data, loading, error, refetch } = useApi<HealthResponse>('/health');
 
-  const mockData: HealthResponse = {
-    status: 'healthy',
-    database: 'connected',
-    redis: 'connected',
-    version: '0.1.0',
-    providers: {
-      ai: 'operational',
-      weather: 'operational',
-      ocr: 'degraded',
-      storage: 'operational'
-    }
-  };
-
-  const healthData = useMock ? mockData : data;
+  
+  const healthData = data;
   const isHealthy = healthData?.status === 'healthy';
 
   const handleRefresh = async () => {
-    if (!useMock) {
+    if (true) {
       await refetch();
     }
   };
@@ -73,31 +59,31 @@ export function HealthCheck() {
           <label className="flex items-center gap-2 text-sm text-graphite-600">
             <input 
               type="checkbox" 
-              checked={useMock} 
-              onChange={(e) => setUseMock(e.target.checked)}
+              checked={false} 
+              
               className="rounded border-graphite-300 text-mining-amber-500 focus:ring-mining-amber-500"
             />
             Use Mock Data
           </label>
           <button 
             onClick={handleRefresh}
-            disabled={loading && !useMock}
+            disabled={loading}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-graphite-200 text-graphite-700 rounded-md hover:bg-graphite-50 hover:text-graphite-900 transition-colors text-sm font-medium disabled:opacity-50"
           >
-            <RefreshCcw size={16} className={(loading && !useMock) ? "animate-spin" : ""} />
+            <RefreshCcw size={16} className={(loading) ? "animate-spin" : ""} />
             Refresh
           </button>
         </div>
       </div>
 
-      {error && !useMock ? (
+      {error ? (
         <div className="bg-white rounded-card border border-graphite-100 shadow-card p-6 bg-red-50 border-red-200 flex flex-col items-center text-center justify-center py-12">
           <Activity size={48} className="text-red-300 mb-4" />
           <h2 className="text-lg font-semibold text-red-800">Connection Failed</h2>
           <p className="text-red-600 mt-1 mb-6 max-w-md">Could not reach the health endpoint. Ensure the backend server is running.</p>
           <p className="text-xs font-mono text-red-500 bg-white p-2 rounded border border-red-100">{error}</p>
         </div>
-      ) : loading && !useMock ? (
+      ) : loading ? (
         <div className="bg-white rounded-card border border-graphite-100 shadow-card p-12 flex flex-col items-center justify-center min-h-[400px]">
           <div className="w-10 h-10 border-4 border-graphite-100 border-t-mining-amber-500 rounded-full animate-spin mb-4"></div>
           <p className="text-graphite-500 font-medium">Checking system health...</p>

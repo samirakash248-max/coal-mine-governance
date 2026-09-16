@@ -1,3 +1,4 @@
+import { VoiceRecorder } from '../../components/ui/VoiceRecorder';
 import { useState } from 'react';
 import { useCreateFieldEvent, useAIClassify } from '../../hooks/useFieldOps';
 
@@ -68,7 +69,7 @@ export default function ReportEvent() {
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Description</label>
+          <div className="flex justify-between items-center"><label className="block text-sm font-medium text-gray-700">Description</label><VoiceRecorder onTranscriptionComplete={(t: string) => setDescription(prev => prev + " " + t)} /></div>
           <textarea 
             value={description} 
             onChange={e => setDescription(e.target.value)}

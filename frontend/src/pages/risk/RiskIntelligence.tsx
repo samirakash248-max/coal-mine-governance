@@ -1,5 +1,5 @@
-﻿import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import { useState } from 'react';
+﻿import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Button } from '../../components/ui/button';
 import { AlertTriangle, Info, AlertCircle, ShieldAlert } from 'lucide-react';
@@ -130,8 +130,28 @@ export default function RiskIntelligence() {
   );
 }
 
+import { aiApiClient } from '@/api/client';
+import { toast } from 'sonner';
+
 function CaseDetailView({ riskCase }: { riskCase: RiskEvent }) {
   const { data: auditLogs, isLoading: isLoadingAudit } = useEntityAuditLogs('SafetyEvent', riskCase.id);
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const handleAnalyze = async () => {
+    setIsAnalyzing(true);
+    try {
+      const response = await aiApiClient.post('/api/v1/copilot/chat', {
+        message: `Analyze this risk case: Title: ${riskCase.title}, Description: ${riskCase.description}, Score: ${riskCase.risk_score}, Level: ${riskCase.risk_level}. What are the likely causes and recommended actions?`,
+        mine_id: riskCase.mine_id
+      });
+      setAiAnalysis(response.data.answer);
+    } catch (err) {
+      toast.error("AI Analysis failed or is unavailable.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   return (
     <Card className="h-full flex flex-col">
@@ -157,6 +177,31 @@ function CaseDetailView({ riskCase }: { riskCase: RiskEvent }) {
       </CardHeader>
       
       <CardContent className="flex-1 overflow-y-auto pt-6 space-y-8">
+        
+        {/* AI Analysis Section */}
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-purple-500" />
+              AI Assistant Analysis
+            </h3>
+            <Button size="sm" variant="outline" onClick={handleAnalyze} disabled={isAnalyzing}>
+              {isAnalyzing ? "Analyzing..." : "Request AI Analysis"}
+            </Button>
+          </div>
+          
+          {aiAnalysis && (
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="text-xs font-bold text-purple-800 mb-2 uppercase tracking-wider">
+                AI-Generated Analysis � Verify before taking regulatory action
+              </div>
+              <div className="text-sm text-purple-900 whitespace-pre-wrap leading-relaxed">
+                {aiAnalysis}
+              </div>
+            </div>
+          )}
+        </div>
+
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-gray-500" />
@@ -193,7 +238,7 @@ function CaseDetailView({ riskCase }: { riskCase: RiskEvent }) {
             <p className="text-sm text-gray-500 italic">No historical audit events found for this case.</p>
           ) : (
             <div className="relative border-l border-gray-200 ml-2 space-y-6">
-              {auditLogs.map((log) => (
+              {auditLogs.map((log: any) => (
                 <div key={log.id} className="pl-6 relative">
                   <div className="absolute w-3 h-3 bg-gray-200 rounded-full -left-[6.5px] top-1.5 border-2 border-white" />
                   <div className="flex items-start justify-between mb-1">

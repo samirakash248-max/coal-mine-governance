@@ -46,9 +46,9 @@ class ActionStatus(str, enum.Enum):
 class Inspection(BaseModel):
     __tablename__ = "inspections"
     
-    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), nullable=False, index=True)
-    department_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("departments.id", ondelete="SET NULL"), nullable=True)
-    inspector_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
+    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), index=True, nullable=False)
+    department_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("departments.id", ondelete="SET NULL"), index=True, nullable=True)
+    inspector_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), index=True, nullable=False)
     
     type: Mapped[str] = mapped_column(String(100), nullable=False)
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
@@ -57,30 +57,31 @@ class Inspection(BaseModel):
     latitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     longitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     location_geom = mapped_column(Geometry('POINT', srid=4326), nullable=True)
-    status: Mapped[InspectionStatus] = mapped_column(SQLEnum(InspectionStatus), nullable=False, default=InspectionStatus.DRAFT, index=True)
+    status: Mapped[InspectionStatus] = mapped_column(SQLEnum(InspectionStatus, native_enum=False, length=50), nullable=False, default=InspectionStatus.DRAFT, index=True)
     
     idempotency_key: Mapped[Optional[str]] = mapped_column(String(255), unique=True, nullable=True)
+    cryptographic_signature: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
 
 class SafetyEvent(BaseModel):
     __tablename__ = "safety_events"
     
-    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), nullable=False, index=True)
+    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), index=True, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     
     # Human-approved or final fields
-    type: Mapped[Optional[SafetyEventType]] = mapped_column(SQLEnum(SafetyEventType), nullable=True, index=True)
-    category: Mapped[Optional[SafetyEventCategory]] = mapped_column(SQLEnum(SafetyEventCategory), nullable=True)
-    severity: Mapped[Optional[SafetyEventSeverity]] = mapped_column(SQLEnum(SafetyEventSeverity), nullable=True, index=True)
+    type: Mapped[Optional[SafetyEventType]] = mapped_column(SQLEnum(SafetyEventType, native_enum=False, length=50), nullable=True, index=True)
+    category: Mapped[Optional[SafetyEventCategory]] = mapped_column(SQLEnum(SafetyEventCategory, native_enum=False, length=50), nullable=True)
+    severity: Mapped[Optional[SafetyEventSeverity]] = mapped_column(SQLEnum(SafetyEventSeverity, native_enum=False, length=50), nullable=True, index=True)
     
     # AI predicted fields
-    ai_event_type: Mapped[Optional[SafetyEventType]] = mapped_column(SQLEnum(SafetyEventType), nullable=True)
-    ai_category: Mapped[Optional[SafetyEventCategory]] = mapped_column(SQLEnum(SafetyEventCategory), nullable=True)
-    ai_severity: Mapped[Optional[SafetyEventSeverity]] = mapped_column(SQLEnum(SafetyEventSeverity), nullable=True)
+    ai_event_type: Mapped[Optional[SafetyEventType]] = mapped_column(SQLEnum(SafetyEventType, native_enum=False, length=50), nullable=True)
+    ai_category: Mapped[Optional[SafetyEventCategory]] = mapped_column(SQLEnum(SafetyEventCategory, native_enum=False, length=50), nullable=True)
+    ai_severity: Mapped[Optional[SafetyEventSeverity]] = mapped_column(SQLEnum(SafetyEventSeverity, native_enum=False, length=50), nullable=True)
     ai_prediction_timestamp: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     
     # Review tracking
     human_reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    human_reviewer_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    human_reviewer_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)
     is_ai_overridden: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     
     # Risk Engine outputs
@@ -96,21 +97,22 @@ class SafetyEvent(BaseModel):
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     
     is_anonymous: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    reporter_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    inspection_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("inspections.id", ondelete="SET NULL"), nullable=True)
+    reporter_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)
+    inspection_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("inspections.id", ondelete="SET NULL"), index=True, nullable=True)
     
     idempotency_key: Mapped[Optional[str]] = mapped_column(String(255), unique=True, nullable=True)
+    cryptographic_signature: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
 
 class CorrectiveAction(BaseModel):
     __tablename__ = "corrective_actions"
     
-    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), nullable=False)
-    source_inspection_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("inspections.id", ondelete="SET NULL"), nullable=True)
-    source_event_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("safety_events.id", ondelete="SET NULL"), nullable=True)
+    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), index=True, nullable=False)
+    source_inspection_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("inspections.id", ondelete="SET NULL"), index=True, nullable=True)
+    source_event_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("safety_events.id", ondelete="SET NULL"), index=True, nullable=True)
     
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    assigned_to_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    assigned_to_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)
     due_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    status: Mapped[ActionStatus] = mapped_column(SQLEnum(ActionStatus), nullable=False, default=ActionStatus.OPEN)
+    status: Mapped[ActionStatus] = mapped_column(SQLEnum(ActionStatus, native_enum=False, length=50), nullable=False, default=ActionStatus.OPEN)
 
 

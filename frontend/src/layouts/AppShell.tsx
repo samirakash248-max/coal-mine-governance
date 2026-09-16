@@ -14,29 +14,29 @@ import { Badge } from '../components/ui/badge';
 import { CopilotDrawer } from '../components/Copilot/CopilotDrawer';
 
 const navItems = [
-  { name: 'Dashboard', to: '/dashboard', icon: Home },
-  { name: 'Daily Brief', to: '/daily-brief', icon: Newspaper },
-  { name: 'Governance Map', to: '/gis', icon: MapIcon },
-  { name: 'Weather Risk', to: '/weather', icon: Cloud },
-  { name: 'Mines', to: '/mines', icon: Map },
-  { name: 'Compliance Calendar', to: '/compliance/calendar', icon: Calendar },
-  { name: 'Report Observation', to: '/field/report', icon: AlertTriangle },
-  { name: 'Corrective Actions', to: '/field/actions', icon: CheckCircle },
-  { name: 'Document Library', to: '/documents', icon: FileText },
-  { name: 'Inspections', to: '/inspections', icon: Search },
-  { name: 'Safety', to: '/safety', icon: Shield },
-  { name: 'Risk Intelligence', to: '/risk', icon: AlertTriangle },
-  { name: 'Audit Trail', to: '/audit', icon: Shield },
-  { name: 'Analytics', to: '/analytics', icon: BarChart3 },
-  { name: 'Reports', to: '/reports', icon: FileText },
-  { name: 'Grievances', to: '/grievances', icon: MessageSquare },
+  { name: 'Dashboard', to: '/dashboard', icon: Home, perm: 'dashboard:read' },
+  { name: 'Daily Brief', to: '/daily-brief', icon: Newspaper, perm: 'dashboard:read' },
+  { name: 'Governance Map', to: '/gis', icon: MapIcon, perm: 'mine:read' },
+  { name: 'Weather Risk', to: '/weather', icon: Cloud, perm: 'weather:read' },
+  { name: 'Mines', to: '/mines', icon: Map, perm: 'mine:read' },
+  { name: 'Compliance Calendar', to: '/compliance/calendar', icon: Calendar, perm: 'compliance:read' },
+  { name: 'Report Observation', to: '/field/report', icon: AlertTriangle, perm: 'safety:create' },
+  { name: 'Corrective Actions', to: '/field/actions', icon: CheckCircle, perm: 'safety:read' },
+  { name: 'Document Library', to: '/documents', icon: FileText, perm: 'document:read' },
+  { name: 'Inspections', to: '/inspections', icon: Search, perm: 'inspection:read' },
+  { name: 'Safety', to: '/safety', icon: Shield, perm: 'safety:read' },
+  { name: 'Risk Intelligence', to: '/risk', icon: AlertTriangle, perm: 'risk:read' },
+  { name: 'Audit Trail', to: '/audit', icon: Shield, perm: 'audit:read' },
+  { name: 'Analytics', to: '/analytics', icon: BarChart3, perm: 'report:read' },
+  { name: 'Reports', to: '/reports', icon: FileText, perm: 'report:read' },
+  { name: 'Grievances', to: '/grievances', icon: MessageSquare, perm: 'grievance:read' },
 ];
 
 export function AppShell() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCopilotOpen, setCopilotOpen] = useState(false);
   const { data: userProfile } = useUser();
-  const { logout } = useAuth();
+  const { logout, hasPermission } = useAuth();
   const { isOffline, isSyncing } = useOfflineSync();
 
   return (
@@ -72,7 +72,7 @@ export function AppShell() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
-          {navItems.map((item) => (
+          {navItems.filter(item => hasPermission(item.perm)).map((item) => (
             <NavLink
               key={item.name}
               to={item.to}
@@ -201,6 +201,8 @@ export function AppShell() {
     </div>
   );
 }
+
+
 
 
 

@@ -69,6 +69,18 @@ app.add_middleware(
 # Register Exception Handlers
 register_exception_handlers(app)
 
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    try:
+        response = await call_next(request)
+        if hasattr(response, "headers"):
+            response.headers["X-Content-Type-Options"] = "nosniff"
+            response.headers["X-Frame-Options"] = "DENY"
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        return response
+    except Exception as e:
+        raise e
+
 # Include v1 Router
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(public_router, prefix="/api/public/v1", tags=["Public Transparency"])
@@ -79,4 +91,6 @@ async def root():
 
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host="0.0.0.0", port=8002, reload=settings.DEBUG)
+
+
 

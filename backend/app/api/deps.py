@@ -1,8 +1,23 @@
+﻿import uuid
+from typing import Optional
+from pydantic import BaseModel, Field
+from fastapi import Query
+
+class PaginationParams(BaseModel):
+    skip: int = Field(default=0, ge=0)
+    limit: int = Field(default=100, ge=1, le=1000)
+
+def get_pagination(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000)
+) -> PaginationParams:
+    return PaginationParams(skip=skip, limit=limit)
+
 """FastAPI dependency injection functions.
 
 These provide database sessions and provider instances to route handlers.
 """
-from app.database import get_db  # noqa: F401 — re-exported for convenience
+from app.database import get_db  # noqa: F401 â€” re-exported for convenience
 from app.config import get_settings  # noqa: F401
 
 from app.providers.ai import get_ai_provider as _get_ai_provider, AIProvider
@@ -18,31 +33,31 @@ __all__ = [
 
 
 def get_ai_provider_dep() -> AIProvider:
-    """FastAPI dependency — returns the configured AI provider instance."""
+    """FastAPI dependency â€” returns the configured AI provider instance."""
     settings = get_settings()
     return _get_ai_provider(settings.AI_PROVIDER)
 
 
 def get_weather_provider_dep() -> WeatherProvider:
-    """FastAPI dependency — returns the configured Weather provider instance."""
+    """FastAPI dependency â€” returns the configured Weather provider instance."""
     settings = get_settings()
     return _get_weather_provider(settings.WEATHER_PROVIDER)
 
 
 def get_ocr_provider_dep() -> OCRProvider:
-    """FastAPI dependency — returns the configured OCR provider instance."""
+    """FastAPI dependency â€” returns the configured OCR provider instance."""
     settings = get_settings()
     return _get_ocr_provider(settings.OCR_PROVIDER)
 
 
 def get_storage_provider_dep() -> StorageProvider:
-    """FastAPI dependency — returns the configured Storage provider instance."""
+    """FastAPI dependency â€” returns the configured Storage provider instance."""
     settings = get_settings()
     return _get_storage_provider(settings.STORAGE_PROVIDER)
 
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
-from jose import jwt, JWTError
+from jose import jwt, JWTError, ExpiredSignatureError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.security import decode_access_token
@@ -66,6 +81,12 @@ async def get_current_user(
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     except JWTError:
         raise credentials_exception
         
@@ -87,3 +108,22 @@ def require_role(roles: list[Role]):
             )
         return current_user
     return role_checker
+
+from app.core.permissions import Permission, get_role_permissions
+
+def require_authenticated_user(current_user: User = Depends(get_current_user)) -> User:
+    return current_user
+
+def require_permission(permission: Permission):
+    async def permission_checker(current_user: User = Depends(get_current_user)):
+        user_permissions = get_role_permissions(current_user.role)
+        if permission not in user_permissions and current_user.role not in (Role.SYSTEM_ADMIN, Role.ADMIN):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Missing required permission: {permission.value}"
+            )
+        return current_user
+    return permission_checker
+
+
+

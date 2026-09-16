@@ -1,4 +1,6 @@
-﻿import httpx
+﻿from app.services.audit import log_audit_event
+from fastapi import Request
+import httpx
 import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -6,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import timedelta
 import uuid
+import asyncio
+from datetime import datetime
 
 from app.database import get_db
 from app.config import get_settings, Settings
@@ -18,28 +22,56 @@ from app.api.deps import get_current_user
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+_failed_logins = {} # simple in-memory progressive delay
+
 @router.post("/login", response_model=Token)
 async def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings)
 ):
+    client_ip = request.client.host if request and request.client else "unknown"
+    now = datetime.now()
+    attempts, last_time = _failed_logins.get(client_ip, (0, now))
+    
+    if now - last_time > timedelta(minutes=15):
+        attempts = 0
+        
+    if attempts > 3:
+        delay = min(2 ** (attempts - 3), 5)
+        await asyncio.sleep(delay)
+
     result = await db.execute(select(User).where(User.email == form_data.username))
     user = result.scalar_one_or_none()
     
     if not user or not verify_password(form_data.password, user.hashed_password):
+        _failed_logins[client_ip] = (attempts + 1, datetime.now())
+        if user:
+            await log_audit_event(db, user.id, user.role.value, "LOGIN_FAILURE", "User", user.id, request)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    if not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
         
+    if not user.is_active:
+        _failed_logins[client_ip] = (attempts + 1, datetime.now())
+        await log_audit_event(db, user.id, user.role.value, "LOGIN_FAILURE_INACTIVE", "User", user.id, request)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="Incorrect email or password", # Do not reveal account status vs existence to brute force
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+        
+    _failed_logins.pop(client_ip, None)
+    
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.email, "role": user.role}, expires_delta=access_token_expires
     )
+    
+    await log_audit_event(db, user.id, user.role.value, "LOGIN_SUCCESS", "User", user.id, request)
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.get("/google/login")
@@ -63,6 +95,7 @@ async def get_google_auth_url(settings: Settings = Depends(get_settings)):
 
 @router.post("/google/callback", response_model=Token)
 async def google_auth_callback(
+    request: Request,
     payload: GoogleAuthCallback,
     db: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings)
@@ -123,8 +156,10 @@ async def google_auth_callback(
         db.add(user)
         await db.commit()
         await db.refresh(user)
+        await log_audit_event(db, user.id, user.role.value, "USER_CREATED", "User", user.id, request)
         
     if not user.is_active:
+        await log_audit_event(db, user.id, user.role.value, "LOGIN_FAILURE_INACTIVE", "User", user.id, request)
         raise HTTPException(status_code=400, detail="Inactive user")
         
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -132,11 +167,13 @@ async def google_auth_callback(
         data={"sub": user.email, "role": user.role}, expires_delta=access_token_expires
     )
     
+    await log_audit_event(db, user.id, user.role.value, "LOGIN_SUCCESS", "User", user.id, request)
     return {"access_token": app_access_token, "token_type": "bearer"}
 
 
 @router.post("/signup", response_model=UserResponse)
 async def signup(
+    request: Request,
     payload: SignupRequest,
     db: AsyncSession = Depends(get_db)
 ):
@@ -154,10 +191,13 @@ async def signup(
     db.add(user)
     await db.commit()
     await db.refresh(user)
+    
+    await log_audit_event(db, user.id, user.role.value, "USER_CREATED", "User", user.id, request)
     return user
 
 @router.post("/logout")
-async def logout():
+async def logout(request: Request, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    await log_audit_event(db, current_user.id, current_user.role.value, "LOGOUT", "User", current_user.id, request)
     return {"message": "Successfully logged out"}
 
 @router.get("/me", response_model=UserResponse)
@@ -182,16 +222,23 @@ async def update_me(
 
 @router.post("/change-password", status_code=204)
 async def change_password(
+    request: Request,
     payload: ChangePasswordRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Change the password for the currently authenticated user only."""
     if not verify_password(payload.current_password, current_user.hashed_password):
+        await log_audit_event(db, current_user.id, current_user.role.value, "PASSWORD_CHANGE_FAILURE", "User", current_user.id, request)
         raise HTTPException(status_code=400, detail="Current password is incorrect")
     if len(payload.new_password) < 8:
         raise HTTPException(status_code=422, detail="New password must be at least 8 characters")
     current_user.hashed_password = hash_password(payload.new_password)
     await db.commit()
+    
+    await log_audit_event(db, current_user.id, current_user.role.value, "PASSWORD_CHANGED", "User", current_user.id, request)
     return None
+
+
+
 

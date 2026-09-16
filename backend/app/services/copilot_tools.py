@@ -50,9 +50,11 @@ class CopilotTools:
         data = await svc.get_recurring_violations(self.current_user.mine_id)
         return json.dumps(data)
         
-    async def search_knowledge_base(self, query: str) -> str:
+    async def search_knowledge_base(self, query: str, mine_id = None) -> str:
         svc = RAGRetrievalService(self.db, self.ai_provider)
-        citations = await svc.retrieve_context(query)
+        target_mine = mine_id or self.current_user.mine_id
+        if not target_mine: return json.dumps({"citations": []})
+        citations = await svc.retrieve_context(query, target_mine)
         return json.dumps({"citations": citations})
         
     async def get_environmental_data(self) -> str:

@@ -6,7 +6,7 @@ from .base import BaseModel
 
 class EnvironmentReading(BaseModel):
     __tablename__ = "environment_readings"
-    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), nullable=False)
+    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), index=True, nullable=False)
     parameter: Mapped[str] = mapped_column(String(100), nullable=False) # Air, Dust, Water, Noise
     value: Mapped[float] = mapped_column(Float, nullable=False)
     unit: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -14,7 +14,7 @@ class EnvironmentReading(BaseModel):
 
 class ProductionRecord(BaseModel):
     __tablename__ = "production_records"
-    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), nullable=False)
+    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), index=True, nullable=False)
     date: Mapped[datetime] = mapped_column(Date, nullable=False)
     target: Mapped[float] = mapped_column(Float, nullable=False)
     actual: Mapped[float] = mapped_column(Float, nullable=False)

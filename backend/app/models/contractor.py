@@ -8,7 +8,7 @@ from .base import BaseModel
 
 class Contractor(BaseModel):
     __tablename__ = "contractors"
-    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), nullable=False)
+    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     work_type: Mapped[str] = mapped_column(String(100), nullable=False)
     risk_indicator: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -16,14 +16,14 @@ class Contractor(BaseModel):
 
 class Worker(BaseModel):
     __tablename__ = "workers"
-    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), nullable=False)
-    contractor_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("contractors.id", ondelete="SET NULL"), nullable=True)
+    mine_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), index=True, nullable=False)
+    contractor_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("contractors.id", ondelete="SET NULL"), index=True, nullable=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     training_metadata: Mapped[dict] = mapped_column(JSONB, default={}, nullable=False)
 
 class AttendanceRecord(BaseModel):
     __tablename__ = "attendance_records"
-    worker_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workers.id", ondelete="CASCADE"), nullable=False)
+    worker_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workers.id", ondelete="CASCADE"), index=True, nullable=False)
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     location_data: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

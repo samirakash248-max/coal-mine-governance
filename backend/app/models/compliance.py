@@ -22,19 +22,19 @@ class ComplianceRequirement(BaseModel):
     frequency: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     source_reference: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     
-    applicable_mine_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), nullable=True)
+    applicable_mine_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("mines.id", ondelete="CASCADE"), index=True, nullable=True)
     
     records: Mapped[list["ComplianceRecord"]] = relationship(back_populates="requirement", cascade="all, delete-orphan")
 
 class ComplianceRecord(BaseModel):
     __tablename__ = "compliance_records"
     
-    requirement_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("compliance_requirements.id", ondelete="CASCADE"), nullable=False)
+    requirement_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("compliance_requirements.id", ondelete="CASCADE"), index=True, nullable=False)
     due_date: Mapped[date] = mapped_column(Date, nullable=False)
-    status: Mapped[ComplianceStatus] = mapped_column(SQLEnum(ComplianceStatus), nullable=False, default=ComplianceStatus.COMPLIANT)
+    status: Mapped[ComplianceStatus] = mapped_column(SQLEnum(ComplianceStatus, native_enum=False, length=50), nullable=False, default=ComplianceStatus.COMPLIANT)
     
-    responsible_department_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("departments.id", ondelete="SET NULL"), nullable=True)
-    responsible_officer_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    responsible_department_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("departments.id", ondelete="SET NULL"), index=True, nullable=True)
+    responsible_officer_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)
     
     submission_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     verification_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -45,9 +45,9 @@ class ComplianceRecord(BaseModel):
 class ComplianceEvidence(BaseModel):
     __tablename__ = "compliance_evidence"
     
-    record_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("compliance_records.id", ondelete="CASCADE"), nullable=False)
+    record_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("compliance_records.id", ondelete="CASCADE"), index=True, nullable=False)
     storage_path: Mapped[str] = mapped_column(String(1024), nullable=False)
     file_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    uploaded_by: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    uploaded_by: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)
     
     record: Mapped["ComplianceRecord"] = relationship(back_populates="evidence")

@@ -7,17 +7,23 @@ from pydantic import BaseModel
 
 from app.database import get_db
 from app.models.user import User
-from app.api.deps import get_current_user, get_ai_provider_dep
+from app.api.deps import get_current_user, get_ai_provider_dep, get_pagination, PaginationParams
 from app.providers.ai.base import AIProvider
 from app.services.copilot import CopilotService
 from app.services.daily_brief import DailyBriefService
+from app.services.audit import log_audit_event
 
 router = APIRouter()
 logger = logging.getLogger("ai.observability")
 
+import uuid
+from typing import Optional
+
 class ChatRequest(BaseModel):
     message: str
     history: List[Dict[str, str]] = []
+    mine_id: Optional[uuid.UUID] = None
+
 
 @router.post("/chat", response_model=Dict[str, Any])
 async def chat_with_copilot(
@@ -31,7 +37,16 @@ async def chat_with_copilot(
     logger.info(f"AI Request Started: {request.url.path} by user {current_user.id}")
     try:
         service = CopilotService(db, ai_provider, current_user)
-        result = await service.process_chat(req.message, req.history)
+        result = await service.process_chat(req.message, req.history, req.mine_id)
+        
+        await log_audit_event(
+            db=db,
+            user_id=current_user.id,
+            action="AI_COPILOT_CHAT",
+            entity_type="AI_SERVICE",
+            entity_id=req.mine_id or current_user.id,
+            role=current_user.role.value, after_state={"message": req.message, "provider": ai_provider.__class__.__name__}
+        )
         duration = time.time() - start_time
         logger.info(f"AI Request Completed: {request.url.path} | Duration: {duration:.2f}s | Provider: {ai_provider.__class__.__name__}")
         return result

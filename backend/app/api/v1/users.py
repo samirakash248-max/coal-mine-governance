@@ -89,6 +89,11 @@ async def update_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
         
+    # STRICT TENANT ISOLATION (IDOR Prevention):
+    # A MINE_MANAGER can only modify users belonging to their own mine.
+    if current_user.role == Role.MINE_MANAGER and user.mine_id != current_user.mine_id:
+        raise HTTPException(status_code=403, detail="Forbidden: Cannot modify users from another mine.")
+        
     old_role = user.role
     old_active = user.is_active
         
@@ -112,6 +117,8 @@ async def update_user(
     await db.commit()
     await db.refresh(user)
     
+    # CRYPTOGRAPHIC AUDIT TRAIL:
+    # We log the event using our unified ledger which computes a rolling SHA-256 hash chain for absolute immutability.
     await log_audit_event(db, current_user.id, current_user.role.value, "USER_UPDATED", "User", user.id, request)
     if req.role is not None and req.role != old_role:
         await log_audit_event(db, current_user.id, current_user.role.value, "ROLE_CHANGED", "User", user.id, request, before_state={"role": old_role}, after_state={"role": user.role})

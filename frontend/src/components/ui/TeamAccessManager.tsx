@@ -1,5 +1,5 @@
-﻿import React, { useState, useEffect } from "react";
-import { User, Shield, ShieldAlert, CheckCircle2, XCircle, MoreHorizontal, UserCog, UserX, Loader2 } from "lucide-react";
+﻿import { useState, useEffect } from "react";
+import { Shield, CheckCircle2, XCircle, MoreHorizontal, UserX, Loader2 } from "lucide-react";
 import { apiClient } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,27 +74,6 @@ export function TeamAccessManager() {
     } finally {
       setProcessingId(null);
     }
-  };
-
-  const getRoleBadgeVariant = (role: Role) => {
-    switch (role) {
-      case "SYSTEM_ADMIN":
-      case "CORPORATE_MANAGER":
-        return "destructive"; // Red/High priority
-      case "MINE_MANAGER":
-        return "default"; // Standard Primary
-      case "REGULATORY_AUDITOR":
-        return "secondary";
-      case "MINE_OFFICER":
-      case "FIELD_INSPECTOR":
-        return "outline";
-      default:
-        return "outline";
-    }
-  };
-
-  const formatRoleName = (role: string) => {
-    return role.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
   };
 
   if (loading) {

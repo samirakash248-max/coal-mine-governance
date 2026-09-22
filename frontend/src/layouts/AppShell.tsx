@@ -171,10 +171,10 @@ export function AppShell() {
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 rounded-full p-1 pr-2 hover:bg-graphite-50 transition-colors border border-transparent hover:border-graphite-200">
                   <div className="h-8 w-8 rounded-full bg-earth-200 flex items-center justify-center text-earth-800 font-bold text-sm">
-                    {userProfile?.first_name?.[0] || ''}{userProfile?.last_name?.[0] || 'U'}
+                    {userProfile?.full_name ? userProfile.full_name.charAt(0).toUpperCase() : 'U'}
                   </div>
                   <span className="text-sm font-medium text-graphite-700 hidden sm:block">
-                    {userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : 'Loading...'}
+                    {userProfile?.full_name || 'Loading...'}
                   </span>
                 </div>
                 <button 

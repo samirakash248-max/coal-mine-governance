@@ -3,13 +3,12 @@ import { apiClient } from '../api/client';
 import { useAuth } from '../providers/AuthProvider';
 
 export interface UserProfile {
-  id: number;
+  id: string;
   email: string;
-  first_name: string;
-  last_name: string;
+  full_name: string;
   role: string;
-  department: string;
-  status: string;
+  is_active: boolean;
+  permissions: string[];
 }
 
 export const useUser = () => {

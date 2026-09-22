@@ -75,13 +75,24 @@ async def login(
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.get("/google/login")
-async def get_google_auth_url(settings: Settings = Depends(get_settings)):
+async def get_google_auth_url(request: Request, settings: Settings = Depends(get_settings)):
     if not settings.GOOGLE_CLIENT_ID:
         raise HTTPException(status_code=500, detail="Google OAuth is not configured on the server")
     
+    origin = request.headers.get("origin")
+    referer = request.headers.get("referer")
+    
+    frontend_url = settings.FRONTEND_URL
+    if origin:
+        frontend_url = origin.rstrip('/')
+    elif referer:
+        from urllib.parse import urlparse
+        parsed = urlparse(referer)
+        frontend_url = f"{parsed.scheme}://{parsed.netloc}"
+        
     import secrets
     state = secrets.token_urlsafe(32)
-    redirect_uri = f"{settings.FRONTEND_URL}/auth/callback"
+    redirect_uri = f"{frontend_url}/auth/callback"
     url = (
         "https://accounts.google.com/o/oauth2/v2/auth?"
         "response_type=code&"
@@ -103,7 +114,18 @@ async def google_auth_callback(
     if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
         raise HTTPException(status_code=500, detail="Google OAuth is not configured on the server")
 
-    redirect_uri = f"{settings.FRONTEND_URL}/auth/callback"
+    origin = request.headers.get("origin")
+    referer = request.headers.get("referer")
+    
+    frontend_url = settings.FRONTEND_URL
+    if origin:
+        frontend_url = origin.rstrip('/')
+    elif referer:
+        from urllib.parse import urlparse
+        parsed = urlparse(referer)
+        frontend_url = f"{parsed.scheme}://{parsed.netloc}"
+        
+    redirect_uri = f"{frontend_url}/auth/callback"
     
     async with httpx.AsyncClient() as client:
         token_response = await client.post(

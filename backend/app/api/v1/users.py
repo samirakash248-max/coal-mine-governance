@@ -9,7 +9,7 @@ from app.models.user import User, Role
 from app.schemas.user import UserResponse, UserUpdateMe
 from app.schemas.pagination import PaginatedResponse
 from app.api.deps import get_pagination, PaginationParams
-from app.api.deps import require_permission, require_role, get_current_user
+from app.api.deps import require_permission, require_role, get_current_user, apply_tenant_scope, validate_tenant_mutation, force_tenant_creation
 from app.core.permissions import Permission
 from app.core.security import hash_password
 from app.services.audit import log_audit_event
@@ -38,6 +38,7 @@ async def list_users(
     current_user: User = Depends(require_permission(Permission.USER_READ))
 ):
     stmt = select(User).order_by(User.email).offset(pagination.skip).limit(pagination.limit)
+    stmt = apply_tenant_scope(stmt, User, current_user)
     result = await db.execute(stmt)
     return result.scalars().all()
 
@@ -75,6 +76,10 @@ async def get_user(
     user = await db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    if current_user.mine_id and user.mine_id != current_user.mine_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    if current_user.mine_id and user.mine_id != current_user.mine_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
     return user
 
 @router.patch("/{user_id}", response_model=UserResponse)
@@ -88,6 +93,10 @@ async def update_user(
     user = await db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    if current_user.mine_id and user.mine_id != current_user.mine_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    if current_user.mine_id and user.mine_id != current_user.mine_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
         
     # STRICT TENANT ISOLATION (IDOR Prevention):
     # A MINE_MANAGER can only modify users belonging to their own mine.
@@ -138,6 +147,10 @@ async def delete_user(
     user = await db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    if current_user.mine_id and user.mine_id != current_user.mine_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    if current_user.mine_id and user.mine_id != current_user.mine_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
         
     if user.role in (Role.ADMIN, Role.SYSTEM_ADMIN):
         stmt = select(User).where(User.role.in_([Role.ADMIN, Role.SYSTEM_ADMIN]), User.is_active == True)

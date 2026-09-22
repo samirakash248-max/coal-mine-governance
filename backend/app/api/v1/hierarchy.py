@@ -8,7 +8,7 @@ from app.database import get_db
 from app.models.user import User
 from app.models.hierarchy import Mine
 from app.schemas.hierarchy import MineResponse
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, apply_tenant_scope
 
 router = APIRouter()
 
@@ -18,6 +18,7 @@ async def get_mines(
     current_user: User = Depends(get_current_user)
 ):
     stmt = select(Mine)
+    stmt = apply_tenant_scope(stmt, Mine, current_user)
     
     if current_user.mine_id:
         stmt = stmt.where(Mine.id == current_user.mine_id)
@@ -37,7 +38,8 @@ async def get_mine(
     if current_user.mine_id and current_user.mine_id != mine_id:
         raise HTTPException(status_code=403, detail="Not authorized to view this mine")
         
-    stmt = select(Mine).where(Mine.id == mine_id)
+    stmt = select(Mine)
+    stmt = apply_tenant_scope(stmt, Mine, current_user).where(Mine.id == mine_id)
     result = await db.execute(stmt)
     mine = result.scalar_one_or_none()
     
@@ -65,7 +67,8 @@ async def get_nearby_mines(
         return []
         
     # 2. Base query
-    stmt = select(Mine).where(Mine.id != mine_id)
+    stmt = select(Mine)
+    stmt = apply_tenant_scope(stmt, Mine, current_user).where(Mine.id != mine_id)
     
     # 3. Security Check (Same as normal mines endpoint)
     if current_user.mine_id:

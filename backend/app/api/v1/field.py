@@ -9,7 +9,7 @@ from app.database import get_db
 from app.models.user import User, Role
 from app.models.field import SafetyEvent, CorrectiveAction, SafetyEventType, SafetyEventCategory, SafetyEventSeverity
 from app.schemas.field import SafetyEventCreate, SafetyEventResponse, CorrectiveActionResponse
-from app.api.deps import get_current_user, require_permission
+from app.api.deps import get_current_user, require_permission, apply_tenant_scope, force_tenant_creation
 from app.core.permissions import Permission
 from app.core.security import generate_cryptographic_signature
 from app.services.workflow_service import WorkflowService
@@ -31,8 +31,7 @@ async def get_event_stats(db: AsyncSession = Depends(get_db), current_user: User
         func.sum(case((SafetyEvent.type == 'INCIDENT', 1), else_=0)).label('incidents'),
         func.sum(case((SafetyEvent.severity == 'CRITICAL', 1), else_=0)).label('critical')
     )
-    if current_user.mine_id:
-        stmt = stmt.where(SafetyEvent.mine_id == current_user.mine_id)
+    stmt = apply_tenant_scope(stmt, SafetyEvent, current_user)
         
     result = (await db.execute(stmt)).first()
     
@@ -60,8 +59,7 @@ async def create_safety_event(
     # For prototype, we will just map them
     event_data = event_in.model_dump()
     
-    if current_user.mine_id and event_data.get("mine_id") != current_user.mine_id:
-        raise HTTPException(status_code=403, detail="Cannot create event for another mine")
+    event_data = force_tenant_creation(event_data, current_user)
     event = SafetyEvent(
         **event_data,
         date=datetime.now(timezone.utc),
@@ -121,8 +119,7 @@ async def get_events(
     stmt = select(SafetyEvent)
     
     # Scope check
-    if current_user.mine_id:
-        stmt = stmt.where(SafetyEvent.mine_id == current_user.mine_id)
+    stmt = apply_tenant_scope(stmt, SafetyEvent, current_user)
         
     stmt = stmt.offset(skip).limit(limit)
     
@@ -143,11 +140,10 @@ async def get_events(
 @router.get("/events/{id}", response_model=SafetyEventResponse)
 async def get_event(id: uuid.UUID, db: AsyncSession = Depends(get_db), current_user: User = Depends(require_permission(Permission.SAFETY_READ))):
     stmt = select(SafetyEvent).where(SafetyEvent.id == id)
+    stmt = apply_tenant_scope(stmt, SafetyEvent, current_user)
     event = (await db.execute(stmt)).scalar_one_or_none()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
-    if current_user.mine_id and event.mine_id != current_user.mine_id:
-        raise HTTPException(status_code=403, detail="Access denied")
     return event
 
 @router.get("/actions", response_model=list[CorrectiveActionResponse])
@@ -159,8 +155,7 @@ async def get_actions(
 ):
     stmt = select(CorrectiveAction).order_by(CorrectiveAction.due_date.asc()).offset(skip).limit(limit)
     
-    if current_user.mine_id:
-        stmt = stmt.where(CorrectiveAction.mine_id == current_user.mine_id)
+    stmt = apply_tenant_scope(stmt, CorrectiveAction, current_user)
         
     result = await db.execute(stmt)
     return result.scalars().all()
@@ -181,10 +176,7 @@ async def get_spatial_events(
         
     stmt = select(SafetyEvent).where(SafetyEvent.location_geom.is_not(None))
     
-    if current_user.mine_id:
-        if current_user.mine_id != mine_id:
-            return []
-        stmt = stmt.where(SafetyEvent.mine_id == current_user.mine_id)
+    stmt = apply_tenant_scope(stmt, SafetyEvent, current_user)
         
     # Spatial filter for events within radius of the target mine
     radius_deg = radius_km / 111.0

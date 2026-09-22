@@ -7,7 +7,7 @@ from app.models.user import User
 from app.models.hierarchy import Mine
 from app.models.compliance import ComplianceRecord, ComplianceRequirement, ComplianceStatus
 from app.schemas.dashboard import DashboardSummary
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, apply_tenant_scope
 
 router = APIRouter()
 

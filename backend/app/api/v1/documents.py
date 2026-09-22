@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from app.database import get_db
 from app.models.user import User
 from app.models.document import Document, DocumentStatus
-from app.api.deps import get_current_user, get_ocr_provider_dep, get_ai_provider_dep
+from app.api.deps import get_current_user, apply_tenant_scope, force_tenant_creation, get_ocr_provider_dep, get_ai_provider_dep
 from app.providers.ocr.base import OCRProvider
 from app.providers.ai.base import AIProvider
 from app.schemas.document import DocumentResponse, VerifyDocumentRequest, SearchResponse
@@ -21,7 +21,8 @@ async def list_documents(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    stmt = select(Document).where(Document.mine_id == current_user.mine_id)
+    stmt = select(Document)
+    stmt = apply_tenant_scope(stmt, Document, current_user)
     result = await db.execute(stmt)
     return result.scalars().all()
 
@@ -31,7 +32,8 @@ async def get_document(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    stmt = select(Document).where(Document.id == document_id, Document.mine_id == current_user.mine_id)
+    stmt = select(Document).where(Document.id == document_id)
+    stmt = apply_tenant_scope(stmt, Document, current_user)
     doc = (await db.execute(stmt)).scalar_one_or_none()
     if not doc:
         raise HTTPException(404, "Document not found")
@@ -47,6 +49,8 @@ async def upload_document(
     ai_provider: AIProvider = Depends(get_ai_provider_dep)
 ):
     # 1. Create record
+    # Using force_tenant_creation logic via dictionary to find correct mine_id if needed, but here we can just use current_user.mine_id for now as Documents can be corporate-level (mine_id=None).
+    # If it is a Mine Manager, it will correctly use their mine_id.
     doc = Document(
         mine_id=current_user.mine_id,
         owner_id=current_user.id,
@@ -75,7 +79,8 @@ async def verify_document(
     ocr_provider: OCRProvider = Depends(get_ocr_provider_dep),
     ai_provider: AIProvider = Depends(get_ai_provider_dep)
 ):
-    stmt = select(Document).where(Document.id == document_id, Document.mine_id == current_user.mine_id)
+    stmt = select(Document).where(Document.id == document_id)
+    stmt = apply_tenant_scope(stmt, Document, current_user)
     doc = (await db.execute(stmt)).scalar_one_or_none()
     
     if not doc or doc.status != DocumentStatus.PENDING_VERIFICATION:

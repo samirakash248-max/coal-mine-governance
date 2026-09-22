@@ -6,7 +6,7 @@ from typing import List
 
 from app.database import get_db
 from app.models.user import User
-from app.api.deps import get_current_user, get_pagination, PaginationParams
+from app.api.deps import get_current_user, get_pagination, PaginationParams, apply_tenant_scope
 from app.schemas.report import TrendDataPoint, RegionalCompareData
 from app.models.field import SafetyEvent, SafetyEventType
 from app.schemas.field import SafetyEventResponse
@@ -23,8 +23,7 @@ async def get_safety_trends(
     six_months_ago = datetime.now(timezone.utc) - timedelta(days=180)
     
     stmt = select(SafetyEvent).where(SafetyEvent.created_at >= six_months_ago)
-    if current_user.mine_id:
-        stmt = stmt.where(SafetyEvent.mine_id == current_user.mine_id)
+    stmt = apply_tenant_scope(stmt, SafetyEvent, current_user)
         
     events = (await db.execute(stmt)).scalars().all()
     
@@ -109,8 +108,7 @@ async def get_high_risk_cases(
     current_user: User = Depends(get_current_user)
 ):
     stmt = select(SafetyEvent).where(SafetyEvent.risk_level.in_(["HIGH", "CRITICAL"]))
-    if current_user.mine_id:
-        stmt = stmt.where(SafetyEvent.mine_id == current_user.mine_id)
+    stmt = apply_tenant_scope(stmt, SafetyEvent, current_user)
         
     stmt = stmt.order_by(SafetyEvent.risk_score.desc().nullslast()).limit(50)
     

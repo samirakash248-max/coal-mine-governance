@@ -5,7 +5,7 @@ from jose import jwt
 from app.config import get_settings
 
 settings = get_settings()
-pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)

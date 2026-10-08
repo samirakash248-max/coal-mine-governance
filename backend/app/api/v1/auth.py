@@ -193,29 +193,7 @@ async def google_auth_callback(
     return {"access_token": app_access_token, "token_type": "bearer"}
 
 
-@router.post("/signup", response_model=UserResponse)
-async def signup(
-    request: Request,
-    payload: SignupRequest,
-    db: AsyncSession = Depends(get_db)
-):
-    result = await db.execute(select(User).where(User.email == payload.email))
-    if result.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Email already registered")
-        
-    user = User(
-        email=payload.email,
-        full_name=payload.full_name,
-        hashed_password=hash_password(payload.password),
-        role=Role.MINE_OFFICER,
-        is_active=True
-    )
-    db.add(user)
-    await db.commit()
-    await db.refresh(user)
-    
-    await log_audit_event(db, user.id, user.role.value, "USER_CREATED", "User", user.id, request)
-    return user
+# Signup route removed for enterprise security. Users must be provisioned by an Admin.
 
 @router.post("/logout")
 async def logout(request: Request, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):

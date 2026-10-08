@@ -23,6 +23,11 @@ class UserCreateAdmin(BaseModel):
     full_name: str
     role: Role
     is_active: bool = True
+    mine_id: uuid.UUID | None = None
+    organization_id: uuid.UUID | None = None
+    region_id: uuid.UUID | None = None
+    subsidiary_id: uuid.UUID | None = None
+    department_id: uuid.UUID | None = None
 
 class UserUpdateAdmin(BaseModel):
     full_name: str | None = None
@@ -53,13 +58,27 @@ async def create_user(
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email already registered")
         
-    user = User(
-        email=req.email,
-        full_name=req.full_name,
-        hashed_password=hash_password(req.password),
-        role=req.role,
-        is_active=req.is_active
-    )
+    data_dict = {
+        "email": req.email,
+        "full_name": req.full_name,
+        "hashed_password": hash_password(req.password),
+        "role": req.role,
+        "is_active": req.is_active,
+        "mine_id": req.mine_id,
+        "organization_id": req.organization_id,
+        "region_id": req.region_id,
+        "subsidiary_id": req.subsidiary_id,
+        "department_id": req.department_id,
+    }
+    force_tenant_creation(data_dict, current_user)
+    
+    if current_user.role == Role.MINE_MANAGER:
+        # Prevent privilege escalation
+        allowed_roles = [Role.MINE_MANAGER, Role.MINE_OFFICER, Role.FIELD_INSPECTOR, Role.CONTRACTOR, Role.MINER]
+        if req.role not in allowed_roles:
+            raise HTTPException(status_code=403, detail="MINE_MANAGER cannot create users with elevated corporate roles.")
+            
+    user = User(**data_dict)
     db.add(user)
     await db.commit()
     await db.refresh(user)
@@ -76,10 +95,9 @@ async def get_user(
     user = await db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    if current_user.mine_id and user.mine_id != current_user.mine_id:
-        raise HTTPException(status_code=403, detail="Forbidden")
-    if current_user.mine_id and user.mine_id != current_user.mine_id:
-        raise HTTPException(status_code=403, detail="Forbidden")
+    if current_user.role not in [Role.SYSTEM_ADMIN, Role.ADMIN, Role.CORPORATE_MANAGER, Role.REGULATORY_AUDITOR, Role.REGULATOR]:
+        if current_user.mine_id and user.mine_id != current_user.mine_id:
+            raise HTTPException(status_code=403, detail="Forbidden: You can only access users from your own mine.")
     return user
 
 @router.patch("/{user_id}", response_model=UserResponse)
@@ -93,10 +111,9 @@ async def update_user(
     user = await db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    if current_user.mine_id and user.mine_id != current_user.mine_id:
-        raise HTTPException(status_code=403, detail="Forbidden")
-    if current_user.mine_id and user.mine_id != current_user.mine_id:
-        raise HTTPException(status_code=403, detail="Forbidden")
+    if current_user.role not in [Role.SYSTEM_ADMIN, Role.ADMIN, Role.CORPORATE_MANAGER, Role.REGULATORY_AUDITOR, Role.REGULATOR]:
+        if current_user.mine_id and user.mine_id != current_user.mine_id:
+            raise HTTPException(status_code=403, detail="Forbidden: You can only access users from your own mine.")
         
     # STRICT TENANT ISOLATION (IDOR Prevention):
     # A MINE_MANAGER can only modify users belonging to their own mine.
@@ -147,10 +164,9 @@ async def delete_user(
     user = await db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    if current_user.mine_id and user.mine_id != current_user.mine_id:
-        raise HTTPException(status_code=403, detail="Forbidden")
-    if current_user.mine_id and user.mine_id != current_user.mine_id:
-        raise HTTPException(status_code=403, detail="Forbidden")
+    if current_user.role not in [Role.SYSTEM_ADMIN, Role.ADMIN, Role.CORPORATE_MANAGER, Role.REGULATORY_AUDITOR, Role.REGULATOR]:
+        if current_user.mine_id and user.mine_id != current_user.mine_id:
+            raise HTTPException(status_code=403, detail="Forbidden: You can only access users from your own mine.")
         
     if user.role in (Role.ADMIN, Role.SYSTEM_ADMIN):
         stmt = select(User).where(User.role.in_([Role.ADMIN, Role.SYSTEM_ADMIN]), User.is_active == True)

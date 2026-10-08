@@ -1,62 +1,34 @@
 ﻿import re
-
 filepath = "backend/app/api/v1/auth.py"
-with open(filepath, 'r', encoding='utf-8') as f:
+with open(filepath, "r", encoding="utf-8") as f:
     content = f.read()
 
-target1 = """@router.get("/google/login")
-async def get_google_auth_url(settings: Settings = Depends(get_settings)):
-    if not settings.GOOGLE_CLIENT_ID:
-        raise HTTPException(status_code=500, detail="Google OAuth is not configured on the server")
-    
-    import secrets
-    state = secrets.token_urlsafe(32)
-    redirect_uri = f"{settings.FRONTEND_URL}/auth/callback\""""
-
-replacement1 = """@router.get("/google/login")
-async def get_google_auth_url(request: Request, settings: Settings = Depends(get_settings)):
-    if not settings.GOOGLE_CLIENT_ID:
-        raise HTTPException(status_code=500, detail="Google OAuth is not configured on the server")
-    
-    origin = request.headers.get("origin")
-    referer = request.headers.get("referer")
-    
-    frontend_url = settings.FRONTEND_URL
-    if origin:
-        frontend_url = origin.rstrip('/')
-    elif referer:
-        from urllib.parse import urlparse
-        parsed = urlparse(referer)
-        frontend_url = f"{parsed.scheme}://{parsed.netloc}"
+target = """@router.post("/signup", response_model=UserResponse)
+async def signup(
+    request: Request,
+    payload: SignupRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(User).where(User.email == payload.email))
+    if result.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Email already registered")
         
-    import secrets
-    state = secrets.token_urlsafe(32)
-    redirect_uri = f"{frontend_url}/auth/callback\""""
-
-content = content.replace(target1, replacement1)
-
-target2 = """    if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
-        raise HTTPException(status_code=500, detail="Google OAuth is not configured on the server")
-
-    redirect_uri = f"{settings.FRONTEND_URL}/auth/callback\""""
-
-replacement2 = """    if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
-        raise HTTPException(status_code=500, detail="Google OAuth is not configured on the server")
-
-    origin = request.headers.get("origin")
-    referer = request.headers.get("referer")
+    user = User(
+        email=payload.email,
+        full_name=payload.full_name,
+        hashed_password=hash_password(payload.password),
+        role=Role.MINE_OFFICER,
+        is_active=True
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
     
-    frontend_url = settings.FRONTEND_URL
-    if origin:
-        frontend_url = origin.rstrip('/')
-    elif referer:
-        from urllib.parse import urlparse
-        parsed = urlparse(referer)
-        frontend_url = f"{parsed.scheme}://{parsed.netloc}"
-        
-    redirect_uri = f"{frontend_url}/auth/callback\""""
+    await log_audit_event(db, user.id, user.role.value, "USER_CREATED", "User", user.id, request)
+    return user"""
 
-content = content.replace(target2, replacement2)
+replacement = """# Signup route removed for enterprise security. Users must be provisioned by an Admin."""
+content = content.replace(target, replacement)
 
-with open(filepath, 'w', encoding='utf-8') as f:
+with open(filepath, "w", encoding="utf-8") as f:
     f.write(content)
